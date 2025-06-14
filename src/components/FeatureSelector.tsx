@@ -56,11 +56,46 @@ export const FeatureSelector: React.FC<FeatureSelectorProps> = ({ onFeatureSelec
       title: 'Calendar Integration',
       description: 'Seamless calendar management and scheduling',
       features: ['Event scheduling', 'Meeting coordination', 'Availability tracking']
+    },
+    {
+      key: 'emailSupport',
+      planKey: 'email-support',
+      title: 'Email Support',
+      description: 'Professional email support for all your HR needs',
+      features: ['24/7 email assistance', 'Quick response time', 'Expert guidance']
+    },
+    {
+      key: 'basicAnalytics',
+      planKey: 'basic-analytics',
+      title: 'Basic Analytics',
+      description: 'Essential HR metrics and reporting tools',
+      features: ['Performance dashboards', 'Basic reports', 'Data visualization']
+    },
+    {
+      key: 'prioritySupport',
+      planKey: 'priority-support',
+      title: 'Priority Support',
+      description: 'Get priority assistance when you need it most',
+      features: ['Priority queue', 'Faster response times', 'Dedicated support agent']
+    },
+    {
+      key: 'advancedAnalytics',
+      planKey: 'advanced-analytics',
+      title: 'Advanced Analytics',
+      description: 'Comprehensive analytics and business intelligence',
+      features: ['Custom reports', 'Predictive analytics', 'Data insights']
+    },
+    {
+      key: 'apiAccess',
+      planKey: 'api-access',
+      title: 'API Access',
+      description: 'Integrate with your existing systems and workflows',
+      features: ['REST API access', 'Webhook support', 'Developer documentation']
     }
   ];
 
   return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       {features.map((feature) => (
         <FeatureCard
           key={feature.key}

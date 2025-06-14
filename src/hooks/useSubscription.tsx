@@ -10,6 +10,11 @@ interface SubscriptionFeatures {
   candidateMatching: boolean;
   teamCollaboration: boolean;
   calendarIntegration: boolean;
+  emailSupport: boolean;
+  basicAnalytics: boolean;
+  prioritySupport: boolean;
+  advancedAnalytics: boolean;
+  apiAccess: boolean;
 }
 
 interface UserSubscription {
@@ -25,7 +30,12 @@ const FEATURE_PLANS = {
   'performance-evaluation': { name: 'Performance Evaluation', price: '₹249' },
   'candidate-matching': { name: 'Candidate Matching', price: '₹299' },
   'team-collaboration': { name: 'Team Collaboration', price: '₹399' },
-  'calendar-integration': { name: 'Calendar Integration', price: '₹199' }
+  'calendar-integration': { name: 'Calendar Integration', price: '₹199' },
+  'email-support': { name: 'Email Support', price: '₹99' },
+  'basic-analytics': { name: 'Basic Analytics', price: '₹149' },
+  'priority-support': { name: 'Priority Support', price: '₹199' },
+  'advanced-analytics': { name: 'Advanced Analytics', price: '₹349' },
+  'api-access': { name: 'API Access', price: '₹499' }
 };
 
 export const useSubscription = () => {
@@ -39,7 +49,12 @@ export const useSubscription = () => {
       performanceEvaluator: false,
       candidateMatching: false,
       teamCollaboration: false,
-      calendarIntegration: false
+      calendarIntegration: false,
+      emailSupport: false,
+      basicAnalytics: false,
+      prioritySupport: false,
+      advancedAnalytics: false,
+      apiAccess: false
     },
     isActive: false
   });

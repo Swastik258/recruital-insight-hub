@@ -8,6 +8,11 @@ import { PerformanceEvaluator } from '@/components/PerformanceEvaluator';
 import { CandidateMatching } from '@/components/CandidateMatching';
 import { TeamCollaboration } from '@/components/team/TeamCollaboration';
 import { CalendarIntegration } from '@/components/calendar/CalendarIntegration';
+import { EmailSupport } from '@/components/EmailSupport';
+import { BasicAnalytics } from '@/components/BasicAnalytics';
+import { PrioritySupport } from '@/components/PrioritySupport';
+import { AdvancedAnalytics } from '@/components/AdvancedAnalytics';
+import { ApiAccess } from '@/components/ApiAccess';
 import { FeaturePaywall } from '@/components/FeaturePaywall';
 import { FeatureSelector } from '@/components/FeatureSelector';
 import { Footer } from '@/components/Footer';
@@ -98,6 +103,51 @@ const Index = () => {
             featureKey="calendarIntegration"
           >
             <CalendarIntegration />
+          </FeaturePaywall>
+        );
+      case 'emailSupport':
+        return (
+          <FeaturePaywall 
+            feature="Email Support" 
+            featureKey="emailSupport"
+          >
+            <EmailSupport />
+          </FeaturePaywall>
+        );
+      case 'basicAnalytics':
+        return (
+          <FeaturePaywall 
+            feature="Basic Analytics" 
+            featureKey="basicAnalytics"
+          >
+            <BasicAnalytics />
+          </FeaturePaywall>
+        );
+      case 'prioritySupport':
+        return (
+          <FeaturePaywall 
+            feature="Priority Support" 
+            featureKey="prioritySupport"
+          >
+            <PrioritySupport />
+          </FeaturePaywall>
+        );
+      case 'advancedAnalytics':
+        return (
+          <FeaturePaywall 
+            feature="Advanced Analytics" 
+            featureKey="advancedAnalytics"
+          >
+            <AdvancedAnalytics />
+          </FeaturePaywall>
+        );
+      case 'apiAccess':
+        return (
+          <FeaturePaywall 
+            feature="API Access" 
+            featureKey="apiAccess"
+          >
+            <ApiAccess />
           </FeaturePaywall>
         );
       default:
