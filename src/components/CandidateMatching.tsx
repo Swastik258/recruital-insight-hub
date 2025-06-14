@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, Star, MapPin, Calendar, Briefcase } from 'lucide-react';
+import { Search, Star, MapPin, Calendar, Briefcase, RefreshCw, ExternalLink } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { useJobOpenings } from '@/hooks/useJobOpenings';
 
 interface Candidate {
   id: string;
@@ -22,15 +23,9 @@ interface Candidate {
   email: string;
 }
 
-interface JobOpening {
-  id: string;
-  title: string;
-  department: string;
-  location: string;
-  requiredSkills: string[];
-}
-
 export const CandidateMatching: React.FC = () => {
+  const { jobOpenings, loading: jobsLoading, refreshJobs } = useJobOpenings();
+  
   const [candidates] = useState<Candidate[]>([
     {
       id: '1',
@@ -67,30 +62,6 @@ export const CandidateMatching: React.FC = () => {
       experience: '3 years',
       skills: ['Figma', 'Design Systems', 'User Research', 'Prototyping'],
       email: 'david@email.com'
-    }
-  ]);
-
-  const [jobOpenings] = useState<JobOpening[]>([
-    {
-      id: '1',
-      title: 'Senior Frontend Developer',
-      department: 'Engineering',
-      location: 'Remote',
-      requiredSkills: ['React', 'TypeScript', 'JavaScript', 'CSS']
-    },
-    {
-      id: '2',
-      title: 'Product Manager',
-      department: 'Product',
-      location: 'New York, NY',
-      requiredSkills: ['Product Strategy', 'Analytics', 'Leadership', 'Agile']
-    },
-    {
-      id: '3',
-      title: 'UX Designer',
-      department: 'Design',
-      location: 'San Francisco, CA',
-      requiredSkills: ['Figma', 'User Research', 'Prototyping', 'Design Systems']
     }
   ]);
 
@@ -133,14 +104,14 @@ export const CandidateMatching: React.FC = () => {
       const candidatesWithScores = candidates.map(candidate => {
         // Calculate match score based on skill overlap
         const skillMatches = candidate.skills.filter(skill =>
-          job.requiredSkills.some(reqSkill =>
+          job.required_skills.some(reqSkill =>
             reqSkill.toLowerCase().includes(skill.toLowerCase()) ||
             skill.toLowerCase().includes(reqSkill.toLowerCase())
           )
         ).length;
         
         const matchScore = Math.min(
-          Math.round((skillMatches / job.requiredSkills.length) * 100) + 
+          Math.round((skillMatches / job.required_skills.length) * 100) + 
           Math.floor(Math.random() * 20), 
           100
         );
@@ -161,6 +132,10 @@ export const CandidateMatching: React.FC = () => {
     }, 2000);
   };
 
+  const handleRefreshJobs = async () => {
+    await refreshJobs();
+  };
+
   const getMatchScoreColor = (score: number) => {
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
@@ -173,13 +148,36 @@ export const CandidateMatching: React.FC = () => {
     return 'bg-red-100 text-red-800';
   };
 
+  const formatPostedDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+    return `${Math.ceil(diffDays / 30)} months ago`;
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Candidate Matching System</h2>
-        <p className="text-muted-foreground">
-          Find and rank the best candidates for your job openings
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Candidate Matching System</h2>
+          <p className="text-muted-foreground">
+            Find and rank the best candidates for your job openings
+          </p>
+        </div>
+        <Button 
+          onClick={handleRefreshJobs}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh Jobs
+        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -189,12 +187,13 @@ export const CandidateMatching: React.FC = () => {
               <CardTitle>Job Opening</CardTitle>
               <CardDescription>
                 Select a position to find matching candidates
+                {jobsLoading && <span className="text-blue-600"> (Loading...)</span>}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Select value={selectedJob} onValueChange={setSelectedJob}>
+              <Select value={selectedJob} onValueChange={setSelectedJob} disabled={jobsLoading}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select job opening" />
+                  <SelectValue placeholder={jobsLoading ? "Loading jobs..." : "Select job opening"} />
                 </SelectTrigger>
                 <SelectContent>
                   {jobOpenings.map((job) => (
@@ -202,7 +201,10 @@ export const CandidateMatching: React.FC = () => {
                       <div className="flex flex-col items-start">
                         <span className="font-medium">{job.title}</span>
                         <span className="text-sm text-muted-foreground">
-                          {job.department} • {job.location}
+                          {job.company} • {job.location}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatPostedDate(job.posted_date)} • {job.source}
                         </span>
                       </div>
                     </SelectItem>
@@ -211,21 +213,47 @@ export const CandidateMatching: React.FC = () => {
               </Select>
               
               {selectedJob && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Required Skills</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {jobOpenings.find(j => j.id === selectedJob)?.requiredSkills.map((skill, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
+                <div className="space-y-3">
+                  {(() => {
+                    const selectedJobData = jobOpenings.find(j => j.id === selectedJob);
+                    if (!selectedJobData) return null;
+                    
+                    return (
+                      <>
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Job Details</h4>
+                          <div className="text-sm space-y-1">
+                            <p><span className="font-medium">Company:</span> {selectedJobData.company}</p>
+                            <p><span className="font-medium">Location:</span> {selectedJobData.location}</p>
+                            {selectedJobData.experience_level && (
+                              <p><span className="font-medium">Experience:</span> {selectedJobData.experience_level}</p>
+                            )}
+                            {selectedJobData.salary_range && (
+                              <p><span className="font-medium">Salary:</span> {selectedJobData.salary_range}</p>
+                            )}
+                            <p><span className="font-medium">Type:</span> {selectedJobData.job_type || 'Full-time'}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Required Skills</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedJobData.required_skills.map((skill, index) => (
+                              <Badge key={index} variant="outline" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 
               <Button 
                 onClick={handleMatchCandidates} 
-                disabled={isMatching}
+                disabled={isMatching || !selectedJob}
                 className="w-full"
               >
                 {isMatching ? 'Finding Matches...' : 'Match Candidates'}
@@ -272,15 +300,23 @@ export const CandidateMatching: React.FC = () => {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>
-                {matchedCandidates.length > 0 ? 'Matched Candidates' : 'Candidate Database'}
-              </CardTitle>
-              <CardDescription>
-                {matchedCandidates.length > 0 
-                  ? `${matchedCandidates.length} candidates ranked by match score`
-                  : `${filteredCandidates.length} candidates available`
-                }
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>
+                    {matchedCandidates.length > 0 ? 'Matched Candidates' : 'Candidate Database'}
+                  </CardTitle>
+                  <CardDescription>
+                    {matchedCandidates.length > 0 
+                      ? `${matchedCandidates.length} candidates ranked by match score`
+                      : `${filteredCandidates.length} candidates available`
+                    }
+                  </CardDescription>
+                </div>
+                <div className="text-right text-sm text-muted-foreground">
+                  <p>{jobOpenings.length} active job openings</p>
+                  <p>Updated daily</p>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
