@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, Zap } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +25,14 @@ const Signup = () => {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { signUp, user } = useAuth();
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
@@ -67,25 +76,26 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Store user data (in real app, this would be handled by your backend)
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('user', JSON.stringify({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
+      const { error } = await signUp(formData.email, formData.password, {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
         company: formData.company,
-        jobTitle: formData.jobTitle
-      }));
-
-      toast({
-        title: "Account created successfully!",
-        description: "Welcome to week-hr. You can now access all features."
+        job_title: formData.jobTitle
       });
 
-      navigate('/dashboard');
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Signup Failed",
+          description: error.message || "There was an error creating your account. Please try again."
+        });
+      } else {
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email to verify your account."
+        });
+        // Don't navigate immediately, wait for email verification
+      }
     } catch (error) {
       toast({
         variant: "destructive",

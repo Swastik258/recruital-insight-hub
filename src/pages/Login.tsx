@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Zap, Github, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LoginForm {
   email: string;
@@ -25,6 +26,14 @@ const Login = () => {
   const [errors, setErrors] = useState<Partial<LoginForm>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, user } = useAuth();
+
+  // Redirect if already logged in
+  React.useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<LoginForm> = {};
@@ -73,23 +82,26 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Simulate login process
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const { error } = await signIn(formData.email, formData.password);
       
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userEmail', formData.email);
-      
-      toast({
-        title: "Success!",
-        description: "You have been logged in successfully."
-      });
-      
-      navigate('/dashboard');
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: error.message || "Invalid credentials. Please try again."
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: "You have been logged in successfully."
+        });
+        navigate('/dashboard');
+      }
     } catch (error) {
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "Invalid credentials. Please try again."
+        description: "An unexpected error occurred. Please try again."
       });
     } finally {
       setIsLoading(false);
