@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-8">
             <h1 className="text-2xl font-bold text-gray-900">
-              AI HR & Recruitment Dashboard
+              week-hr
             </h1>
             <nav className="hidden md:flex space-x-6">
               {navigationItems.map((item) => (

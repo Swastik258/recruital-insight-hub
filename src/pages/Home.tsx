@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,7 +83,7 @@ const Home = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Zap className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">AI HR Pro</h1>
+              <h1 className="text-2xl font-bold text-gray-900">week-hr</h1>
             </div>
             <div className="flex items-center space-x-4">
               <Link to="/login">
@@ -197,7 +196,7 @@ const Home = () => {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <Zap className="h-6 w-6 text-blue-400" />
-                <span className="text-xl font-bold">AI HR Pro</span>
+                <span className="text-xl font-bold">week-hr</span>
               </div>
               <p className="text-gray-400">
                 Empowering HR teams with intelligent automation and insights.
@@ -232,7 +231,7 @@ const Home = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 AI HR Pro. All rights reserved.</p>
+            <p>&copy; 2024 week-hr. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -33,7 +33,7 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <Zap className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900">AI HR Pro</h1>
+            <h1 className="text-2xl font-bold text-gray-900">week-hr</h1>
           </div>
           <p className="text-gray-600">Welcome back to your HR dashboard</p>
         </div>

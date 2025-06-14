@@ -62,7 +62,7 @@ const Signup = () => {
           <div className="text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start space-x-2 mb-6">
               <Zap className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold text-gray-900">AI HR Pro</h1>
+              <h1 className="text-2xl font-bold text-gray-900">week-hr</h1>
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
               Start your free trial today

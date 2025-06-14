@@ -30,7 +30,7 @@ export const Footer: React.FC = () => {
         </div>
         
         <div className="mt-4 pt-4 border-t text-center text-xs text-muted-foreground">
-          © 2024 AI HR & Recruitment Dashboard. All rights reserved.
+          © 2024 week-hr. All rights reserved.
         </div>
       </div>
     </footer>

@@ -141,7 +141,7 @@ export const ResumeScreening = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Advanced Resume Screening Assistant</h1>
+        <h1 className="text-3xl font-bold text-gray-900">week-hr Resume Screening Assistant</h1>
       </div>
 
       <Tabs defaultValue="individual" className="w-full">
