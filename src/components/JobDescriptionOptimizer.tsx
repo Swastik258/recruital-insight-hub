@@ -1,218 +1,222 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { CheckCircle, AlertTriangle, TrendingUp } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Wand2, Loader2, Copy, Download } from 'lucide-react';
+import { optimizeJobDescription } from '@/utils/geminiApi';
 
-interface OptimizationResult {
-  score: number;
-  optimizedText: string;
-  improvements: string[];
-  keywords: string[];
-  inclusivityScore: number;
-  suggestions: string[];
-}
-
-export const JobDescriptionOptimizer: React.FC = () => {
-  const [originalText, setOriginalText] = useState('');
-  const [result, setResult] = useState<OptimizationResult | null>(null);
+export const JobDescriptionOptimizer = () => {
+  const [originalJD, setOriginalJD] = useState('');
+  const [optimizedJD, setOptimizedJD] = useState('');
+  const [analysis, setAnalysis] = useState('');
   const [isOptimizing, setIsOptimizing] = useState(false);
 
-  const handleOptimize = () => {
-    if (!originalText.trim()) {
-      toast({
-        title: "Please enter a job description",
-        description: "Enter the job description you want to optimize.",
-        variant: "destructive"
-      });
+  const handleOptimize = async () => {
+    if (!originalJD.trim()) {
+      alert('Please enter a job description to optimize');
       return;
     }
 
     setIsOptimizing(true);
-
-    // Simulate AI optimization
-    setTimeout(() => {
-      const optimizedResult: OptimizationResult = {
-        score: 85,
-        optimizedText: `Senior Frontend Developer - Join Our Innovation Team
-
-We're seeking a talented Senior Frontend Developer to join our dynamic team and help build cutting-edge web applications that impact millions of users worldwide.
-
-What You'll Do:
-• Develop and maintain responsive web applications using React, TypeScript, and modern JavaScript
-• Collaborate with designers and backend developers to create seamless user experiences
-• Optimize application performance and ensure cross-browser compatibility
-• Mentor junior developers and contribute to technical discussions
-• Participate in code reviews and maintain high coding standards
-
-What We're Looking For:
-• 4+ years of experience in frontend development
-• Strong proficiency in React, TypeScript, HTML5, and CSS3
-• Experience with modern build tools and version control systems
-• Understanding of accessibility standards and SEO best practices
-• Excellent communication skills and team collaboration abilities
-
-What We Offer:
-• Competitive salary and equity package
-• Comprehensive health, dental, and vision insurance
-• Flexible work arrangements and remote-friendly culture
-• Professional development opportunities and conference attendance
-• Collaborative and inclusive work environment
-
-We are an equal opportunity employer committed to diversity and inclusion. We welcome applications from all qualified candidates regardless of race, gender, age, religion, sexual orientation, or disability status.`,
-        improvements: [
-          'Added compelling opening statement',
-          'Improved bullet point structure',
-          'Enhanced benefits section',
-          'Added diversity and inclusion statement',
-          'Optimized for SEO keywords'
-        ],
-        keywords: ['React', 'TypeScript', 'Frontend', 'JavaScript', 'HTML5', 'CSS3', 'Remote'],
-        inclusivityScore: 92,
-        suggestions: [
-          'Consider adding salary range for transparency',
-          'Mention specific team size and structure',
-          'Include information about company culture'
-        ]
-      };
-
-      setResult(optimizedResult);
+    try {
+      const result = await optimizeJobDescription(originalJD);
+      
+      // Parse the result to extract optimized JD and analysis
+      const sections = result.split('\n\n');
+      let optimized = '';
+      let analysisText = '';
+      
+      // Simple parsing - in production, you'd want more sophisticated parsing
+      const optimizedSection = sections.find(s => s.toLowerCase().includes('optimized'));
+      const analysisSection = sections.find(s => s.toLowerCase().includes('improvement') || s.toLowerCase().includes('analysis'));
+      
+      if (optimizedSection) {
+        optimized = optimizedSection.replace(/^.*optimized.*?:/i, '').trim();
+      }
+      if (analysisSection) {
+        analysisText = analysisSection;
+      }
+      
+      // If parsing fails, use the full result
+      if (!optimized) {
+        optimized = result;
+        analysisText = 'AI analysis included in the optimized version above.';
+      }
+      
+      setOptimizedJD(optimized);
+      setAnalysis(analysisText);
+    } catch (error) {
+      console.error('Error optimizing job description:', error);
+      alert('Error optimizing job description. Please try again.');
+    } finally {
       setIsOptimizing(false);
-      toast({
-        title: "Optimization complete",
-        description: "Your job description has been optimized successfully.",
-      });
-    }, 3000);
+    }
+  };
+
+  const copyOptimized = () => {
+    navigator.clipboard.writeText(optimizedJD);
+    alert('Optimized job description copied to clipboard!');
+  };
+
+  const downloadJD = () => {
+    const content = `OPTIMIZED JOB DESCRIPTION\n\n${optimizedJD}\n\n\nANALYSIS\n\n${analysis}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'optimized-job-description.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Job Description Optimizer</h2>
-        <p className="text-muted-foreground">
-          Enhance your job descriptions for better reach and inclusivity
-        </p>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Job Description Optimizer</h1>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Input Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Original Job Description</CardTitle>
+          <CardDescription>Paste your job description below for AI-powered optimization</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="original-jd">Job Description</Label>
+            <textarea
+              id="original-jd"
+              className="w-full p-3 border rounded-md resize-none"
+              rows={10}
+              placeholder="Paste your job description here..."
+              value={originalJD}
+              onChange={(e) => setOriginalJD(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleOptimize} disabled={isOptimizing || !originalJD.trim()}>
+            {isOptimizing ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Optimizing...
+              </>
+            ) : (
+              <>
+                <Wand2 className="mr-2 h-4 w-4" />
+                Optimize with AI
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Results Section */}
+      {optimizedJD && (
         <Card>
           <CardHeader>
-            <CardTitle>Original Job Description</CardTitle>
-            <CardDescription>
-              Paste your job description here for optimization
-            </CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Optimization Results</CardTitle>
+                <CardDescription>AI-enhanced job description with improvements</CardDescription>
+              </div>
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm" onClick={copyOptimized}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+                <Button variant="outline" size="sm" onClick={downloadJD}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <Textarea
-              placeholder="Paste your job description here..."
-              value={originalText}
-              onChange={(e) => setOriginalText(e.target.value)}
-              className="min-h-[300px]"
-            />
-            <Button 
-              onClick={handleOptimize} 
-              disabled={isOptimizing}
-              className="w-full"
-            >
-              {isOptimizing ? 'Optimizing...' : 'Optimize Job Description'}
-            </Button>
+          <CardContent>
+            <Tabs defaultValue="comparison" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="comparison">Before & After</TabsTrigger>
+                <TabsTrigger value="optimized">Optimized Version</TabsTrigger>
+                <TabsTrigger value="analysis">Analysis</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="comparison" className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-semibold mb-2 text-red-600">Before (Original)</h3>
+                    <div className="bg-red-50 p-4 rounded-lg border border-red-200 max-h-96 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                        {originalJD}
+                      </pre>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2 text-green-600">After (Optimized)</h3>
+                    <div className="bg-green-50 p-4 rounded-lg border border-green-200 max-h-96 overflow-y-auto">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                        {optimizedJD}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="optimized">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                    {optimizedJD}
+                  </pre>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="analysis">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700">
+                    {analysis}
+                  </pre>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
+      )}
 
-        {result && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                Optimized Job Description
-              </CardTitle>
-              <CardDescription>
-                Enhanced version with improvements
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="optimized" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="optimized">Optimized</TabsTrigger>
-                  <TabsTrigger value="analysis">Analysis</TabsTrigger>
-                  <TabsTrigger value="suggestions">Suggestions</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="optimized" className="space-y-4">
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <pre className="whitespace-pre-wrap text-sm">{result.optimizedText}</pre>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="analysis" className="space-y-4">
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Overall Score</span>
-                        <span className="text-lg font-bold text-green-600">{result.score}%</span>
-                      </div>
-                      <Progress value={result.score} />
-                    </div>
-                    
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Inclusivity Score</span>
-                        <span className="text-lg font-bold text-blue-600">{result.inclusivityScore}%</span>
-                      </div>
-                      <Progress value={result.inclusivityScore} />
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium mb-2">Key Improvements Made</h4>
-                      <ul className="space-y-1">
-                        {result.improvements.map((improvement, index) => (
-                          <li key={index} className="flex items-center gap-2 text-sm">
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                            {improvement}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium mb-2">Optimized Keywords</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {result.keywords.map((keyword, index) => (
-                          <Badge key={index} variant="outline">
-                            {keyword}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="suggestions" className="space-y-4">
-                  <div>
-                    <h4 className="font-medium mb-3 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      Additional Recommendations
-                    </h4>
-                    <ul className="space-y-2">
-                      {result.suggestions.map((suggestion, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm">
-                          <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5" />
-                          {suggestion}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      {/* Optimization Tips */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Optimization Guidelines</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="space-y-2">
+              <h3 className="font-semibold text-blue-600">SEO Optimization</h3>
+              <ul className="text-gray-600 space-y-1">
+                <li>• Include relevant keywords</li>
+                <li>• Optimize for job board search</li>
+                <li>• Use industry-standard terms</li>
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-green-600">Inclusive Language</h3>
+              <ul className="text-gray-600 space-y-1">
+                <li>• Remove biased terms</li>
+                <li>• Use gender-neutral language</li>
+                <li>• Focus on skills over degrees</li>
+              </ul>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-purple-600">Attraction Factors</h3>
+              <ul className="text-gray-600 space-y-1">
+                <li>• Highlight growth opportunities</li>
+                <li>• Emphasize company culture</li>
+                <li>• Clear value proposition</li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

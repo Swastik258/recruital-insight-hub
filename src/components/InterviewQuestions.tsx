@@ -1,239 +1,189 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Copy, Save } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { MessageSquare, Loader2, Copy, Save } from 'lucide-react';
+import { generateInterviewQuestions } from '@/utils/geminiApi';
 
-interface Question {
-  id: string;
-  question: string;
-  category: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-}
-
-export const InterviewQuestions: React.FC = () => {
-  const [selectedRole, setSelectedRole] = useState<string>('');
-  const [questions, setQuestions] = useState<Question[]>([]);
+export const InterviewQuestions = () => {
+  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [questions, setQuestions] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
   const jobRoles = [
-    'Frontend Developer',
-    'Backend Developer',
-    'Full Stack Developer',
+    'Software Engineer',
     'Product Manager',
-    'UI/UX Designer',
     'Data Scientist',
+    'UX/UI Designer',
+    'Sales Manager',
+    'Marketing Manager',
+    'HR Manager',
+    'Business Analyst',
     'DevOps Engineer',
-    'Marketing Manager'
+    'Customer Success Manager'
   ];
 
-  const sampleQuestions = {
-    'Frontend Developer': [
-      {
-        id: '1',
-        question: 'Can you explain the difference between let, const, and var in JavaScript?',
-        category: 'Technical',
-        difficulty: 'Medium' as const
-      },
-      {
-        id: '2',
-        question: 'How do you optimize the performance of a React application?',
-        category: 'Technical',
-        difficulty: 'Hard' as const
-      },
-      {
-        id: '3',
-        question: 'Tell me about a challenging project you worked on and how you overcame obstacles.',
-        category: 'Behavioral',
-        difficulty: 'Medium' as const
-      },
-      {
-        id: '4',
-        question: 'What is your approach to ensuring cross-browser compatibility?',
-        category: 'Technical',
-        difficulty: 'Medium' as const
-      },
-      {
-        id: '5',
-        question: 'How do you stay updated with the latest frontend technologies?',
-        category: 'General',
-        difficulty: 'Easy' as const
-      }
-    ],
-    'Product Manager': [
-      {
-        id: '1',
-        question: 'How do you prioritize features in a product roadmap?',
-        category: 'Strategic',
-        difficulty: 'Hard' as const
-      },
-      {
-        id: '2',
-        question: 'Describe a time when you had to make a difficult product decision.',
-        category: 'Behavioral',
-        difficulty: 'Medium' as const
-      },
-      {
-        id: '3',
-        question: 'How do you gather and analyze user feedback?',
-        category: 'Process',
-        difficulty: 'Medium' as const
-      },
-      {
-        id: '4',
-        question: 'What metrics do you use to measure product success?',
-        category: 'Analytics',
-        difficulty: 'Medium' as const
-      },
-      {
-        id: '5',
-        question: 'How do you handle conflicting stakeholder requirements?',
-        category: 'Communication',
-        difficulty: 'Hard' as const
-      }
-    ]
-  };
+  const experienceLevels = [
+    'Entry Level (0-2 years)',
+    'Mid Level (3-5 years)',
+    'Senior Level (6-10 years)',
+    'Lead/Principal (10+ years)'
+  ];
 
-  const generateQuestions = () => {
-    if (!selectedRole) {
-      toast({
-        title: "Please select a job role",
-        description: "Choose a job role to generate relevant interview questions.",
-        variant: "destructive"
-      });
+  const handleGenerateQuestions = async () => {
+    if (!selectedRole || !selectedLevel) {
+      alert('Please select both job role and experience level');
       return;
     }
 
     setIsGenerating(true);
-    
-    // Simulate AI generation
-    setTimeout(() => {
-      const roleQuestions = sampleQuestions[selectedRole as keyof typeof sampleQuestions] || [];
-      setQuestions(roleQuestions);
+    try {
+      const generatedQuestions = await generateInterviewQuestions(selectedRole, selectedLevel);
+      setQuestions(generatedQuestions);
+    } catch (error) {
+      console.error('Error generating questions:', error);
+      alert('Error generating questions. Please try again.');
+    } finally {
       setIsGenerating(false);
-      toast({
-        title: "Questions generated successfully",
-        description: `Generated ${roleQuestions.length} interview questions for ${selectedRole}.`,
-      });
-    }, 2000);
+    }
   };
 
-  const copyQuestion = (question: string) => {
-    navigator.clipboard.writeText(question);
-    toast({
-      title: "Question copied",
-      description: "The question has been copied to your clipboard.",
-    });
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(questions);
+    alert('Questions copied to clipboard!');
   };
 
   const saveQuestions = () => {
-    toast({
-      title: "Questions saved",
-      description: "All questions have been saved to your question bank.",
-    });
-  };
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy': return 'bg-green-100 text-green-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Hard': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    const blob = new Blob([questions], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `interview-questions-${selectedRole.replace(/\s+/g, '-').toLowerCase()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">Interview Question Generator</h2>
-        <p className="text-muted-foreground">
-          Generate tailored interview questions based on job roles
-        </p>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Interview Question Generator</h1>
       </div>
 
+      {/* Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle>Generate Questions</CardTitle>
-          <CardDescription>
-            Select a job role to generate relevant interview questions
-          </CardDescription>
+          <CardTitle>Configure Interview Questions</CardTitle>
+          <CardDescription>Select job role and experience level to generate tailored questions</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select job role" />
-              </SelectTrigger>
-              <SelectContent>
-                {jobRoles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              onClick={generateQuestions} 
-              disabled={isGenerating}
-              className="px-8"
-            >
-              {isGenerating ? 'Generating...' : 'Generate Questions'}
-            </Button>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Job Role</Label>
+              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a job role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {jobRoles.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Experience Level</Label>
+              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select experience level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {experienceLevels.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          <Button onClick={handleGenerateQuestions} disabled={isGenerating || !selectedRole || !selectedLevel}>
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating Questions...
+              </>
+            ) : (
+              <>
+                <MessageSquare className="mr-2 h-4 w-4" />
+                Generate Questions
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
 
-      {questions.length > 0 && (
+      {/* Generated Questions */}
+      {questions && (
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex justify-between items-center">
               <div>
-                <CardTitle>Generated Questions for {selectedRole}</CardTitle>
+                <CardTitle>Generated Interview Questions</CardTitle>
                 <CardDescription>
-                  {questions.length} questions generated
+                  Questions for {selectedRole} - {selectedLevel}
                 </CardDescription>
               </div>
-              <Button onClick={saveQuestions} variant="outline" className="flex items-center gap-2">
-                <Save className="h-4 w-4" />
-                Save All
-              </Button>
+              <div className="flex space-x-2">
+                <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy
+                </Button>
+                <Button variant="outline" size="sm" onClick={saveQuestions}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {questions.map((q, index) => (
-                <div key={q.id}>
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-medium text-sm">Q{index + 1}.</span>
-                        <Badge variant="outline">{q.category}</Badge>
-                        <Badge className={getDifficultyColor(q.difficulty)}>
-                          {q.difficulty}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-900">{q.question}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyQuestion(q.question)}
-                      className="flex items-center gap-1"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  {index < questions.length - 1 && <Separator className="mt-4" />}
-                </div>
-              ))}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">
+                {questions}
+              </pre>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Quick Tips */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Interview Tips</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="space-y-2">
+              <h3 className="font-semibold text-blue-600">Behavioral Questions</h3>
+              <p className="text-gray-600">Use STAR method (Situation, Task, Action, Result) to evaluate responses.</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-green-600">Technical Questions</h3>
+              <p className="text-gray-600">Focus on problem-solving approach rather than just correct answers.</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="font-semibold text-purple-600">Cultural Fit</h3>
+              <p className="text-gray-600">Listen for alignment with company values and team dynamics.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

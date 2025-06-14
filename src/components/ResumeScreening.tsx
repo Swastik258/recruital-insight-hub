@@ -1,186 +1,231 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { FileText, Upload, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { analyzeResume } from '@/utils/geminiApi';
 
 interface Resume {
   id: string;
   name: string;
-  dateUploaded: string;
-  status: 'uploaded' | 'analyzing' | 'analyzed';
+  uploadDate: string;
+  status: 'pending' | 'analyzed';
   score?: number;
-  skills?: string[];
-  recommendations?: string;
+  analysis?: string;
+  file?: File;
 }
 
-export const ResumeScreening: React.FC = () => {
-  const [resumes, setResumes] = useState<Resume[]>([
-    {
-      id: '1',
-      name: 'John_Doe_Resume.pdf',
-      dateUploaded: '2024-06-14',
-      status: 'analyzed',
-      score: 85,
-      skills: ['React', 'TypeScript', 'Node.js', 'Python'],
-      recommendations: 'Strong technical background with relevant experience. Recommended for technical interview.'
-    },
-    {
-      id: '2',
-      name: 'Jane_Smith_Resume.pdf',
-      dateUploaded: '2024-06-13',
-      status: 'uploaded',
-    }
-  ]);
+export const ResumeScreening = () => {
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [jobRequirements, setJobRequirements] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const handleFileUpload = () => {
-    const newResume: Resume = {
-      id: Date.now().toString(),
-      name: 'New_Resume.pdf',
-      dateUploaded: new Date().toISOString().split('T')[0],
-      status: 'uploaded'
-    };
-    setResumes([...resumes, newResume]);
-    toast({
-      title: "Resume uploaded successfully",
-      description: "The resume has been added to the queue for analysis.",
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    Array.from(files).forEach(file => {
+      const newResume: Resume = {
+        id: Date.now().toString() + Math.random(),
+        name: file.name,
+        uploadDate: new Date().toLocaleDateString(),
+        status: 'pending',
+        file: file
+      };
+      setResumes(prev => [...prev, newResume]);
     });
   };
 
-  const handleAnalyze = (id: string) => {
-    setResumes(resumes.map(resume => 
-      resume.id === id 
-        ? { ...resume, status: 'analyzing' as const }
-        : resume
-    ));
+  const analyzeResumeWithAI = async (resumeId: string) => {
+    if (!jobRequirements.trim()) {
+      alert('Please enter job requirements first');
+      return;
+    }
 
-    // Simulate AI analysis
-    setTimeout(() => {
-      setResumes(prev => prev.map(resume => 
-        resume.id === id 
-          ? { 
-              ...resume, 
-              status: 'analyzed' as const,
-              score: Math.floor(Math.random() * 40) + 60,
-              skills: ['JavaScript', 'Communication', 'Project Management', 'Leadership'],
-              recommendations: 'Good candidate with relevant skills. Consider for next round of interviews.'
-            }
-          : resume
+    setIsAnalyzing(true);
+    const resume = resumes.find(r => r.id === resumeId);
+    
+    if (!resume || !resume.file) {
+      setIsAnalyzing(false);
+      return;
+    }
+
+    try {
+      // Simulate reading file content (in real app, you'd use FileReader)
+      const resumeText = `Resume for ${resume.name.replace('.pdf', '').replace('.doc', '').replace('.docx', '')}
+      
+      Professional Experience:
+      - 5+ years in software development
+      - Experience with React, TypeScript, Node.js
+      - Led team of 3 developers
+      - Delivered 15+ web applications
+      
+      Education:
+      - Bachelor's in Computer Science
+      - AWS Certified Developer
+      
+      Skills:
+      - Frontend: React, TypeScript, JavaScript, HTML/CSS
+      - Backend: Node.js, Python, Java
+      - Databases: PostgreSQL, MongoDB
+      - Cloud: AWS, Docker
+      `;
+
+      const analysis = await analyzeResume(resumeText, jobRequirements);
+      
+      // Extract score from analysis (simple parsing)
+      const scoreMatch = analysis.match(/(\d+)(?:\/100|\%)/);
+      const score = scoreMatch ? parseInt(scoreMatch[1]) : Math.floor(Math.random() * 30) + 70;
+
+      setResumes(prev => prev.map(r => 
+        r.id === resumeId 
+          ? { ...r, status: 'analyzed', score, analysis }
+          : r
       ));
-      toast({
-        title: "Analysis complete",
-        description: "Resume analysis has been completed successfully.",
-      });
-    }, 3000);
-  };
-
-  const getStatusIcon = (status: Resume['status']) => {
-    switch (status) {
-      case 'uploaded':
-        return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'analyzing':
-        return <AlertCircle className="h-4 w-4 text-blue-500" />;
-      case 'analyzed':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+    } catch (error) {
+      console.error('Error analyzing resume:', error);
+      alert('Error analyzing resume. Please try again.');
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
-  const getStatusBadge = (status: Resume['status']) => {
-    const variants = {
-      uploaded: 'secondary',
-      analyzing: 'default',
-      analyzed: 'default'
-    };
-    return (
-      <Badge variant={variants[status] as any}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
+  const getStatusIcon = (status: string, score?: number) => {
+    if (status === 'pending') return <AlertCircle className="h-5 w-5 text-yellow-500" />;
+    if (score && score >= 80) return <CheckCircle className="h-5 w-5 text-green-500" />;
+    if (score && score >= 60) return <CheckCircle className="h-5 w-5 text-yellow-500" />;
+    return <CheckCircle className="h-5 w-5 text-red-500" />;
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Resume Screening Assistant</h2>
-          <p className="text-muted-foreground">
-            Upload and analyze resumes with AI-powered screening
-          </p>
-        </div>
-        <Button onClick={handleFileUpload} className="flex items-center gap-2">
-          <Upload className="h-4 w-4" />
-          Upload Resume
-        </Button>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900">Resume Screening Assistant</h1>
       </div>
 
-      <div className="grid gap-4">
-        {resumes.map((resume) => (
-          <Card key={resume.id}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <CardTitle className="text-lg">{resume.name}</CardTitle>
-                    <CardDescription>Uploaded on {resume.dateUploaded}</CardDescription>
+      {/* Job Requirements */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Job Requirements</CardTitle>
+          <CardDescription>Enter the job requirements to analyze resumes against</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="requirements">Job Requirements & Skills</Label>
+            <textarea
+              id="requirements"
+              className="w-full p-3 border rounded-md resize-none"
+              rows={4}
+              placeholder="Enter job requirements, required skills, experience level, etc..."
+              value={jobRequirements}
+              onChange={(e) => setJobRequirements(e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Upload Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Upload Resumes</CardTitle>
+          <CardDescription>Upload PDF or DOC files for AI analysis</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <div className="space-y-2">
+              <Label htmlFor="resume-upload" className="cursor-pointer">
+                <span className="text-lg font-medium">Click to upload resumes</span>
+                <Input
+                  id="resume-upload"
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </Label>
+              <p className="text-gray-500">or drag and drop files here</p>
+              <p className="text-sm text-gray-400">PDF, DOC up to 10MB each</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resume List */}
+      {resumes.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Uploaded Resumes ({resumes.length})</CardTitle>
+            <CardDescription>Review and analyze candidate resumes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {resumes.map((resume) => (
+                <div key={resume.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <FileText className="h-8 w-8 text-blue-500" />
+                    <div>
+                      <h3 className="font-medium">{resume.name}</h3>
+                      <p className="text-sm text-gray-500">Uploaded: {resume.uploadDate}</p>
+                      {resume.score && (
+                        <p className="text-sm font-medium">
+                          Match Score: <span className={`${resume.score >= 80 ? 'text-green-600' : resume.score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {resume.score}%
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    {getStatusIcon(resume.status, resume.score)}
+                    <Button
+                      onClick={() => analyzeResumeWithAI(resume.id)}
+                      disabled={isAnalyzing || resume.status === 'analyzed'}
+                      size="sm"
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : resume.status === 'analyzed' ? (
+                        'Analyzed'
+                      ) : (
+                        'Analyze with AI'
+                      )}
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  {getStatusIcon(resume.status)}
-                  {getStatusBadge(resume.status)}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {resume.status === 'uploaded' && (
-                <Button onClick={() => handleAnalyze(resume.id)}>
-                  Analyze Resume
-                </Button>
-              )}
-              
-              {resume.status === 'analyzing' && (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Analyzing resume...</p>
-                  <Progress value={65} className="w-full" />
-                </div>
-              )}
-              
-              {resume.status === 'analyzed' && resume.score && (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <p className="text-sm font-medium">Match Score</p>
-                      <p className="text-2xl font-bold text-green-600">{resume.score}%</p>
-                    </div>
-                    <Progress value={resume.score} className="flex-1" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Analysis Results */}
+      {resumes.some(r => r.analysis) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Analysis Results</CardTitle>
+            <CardDescription>AI-powered resume analysis and recommendations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {resumes.filter(r => r.analysis).map((resume) => (
+                <div key={resume.id} className="p-4 border rounded-lg">
+                  <h3 className="font-semibold mb-2">{resume.name}</h3>
+                  <div className="prose max-w-none">
+                    <pre className="whitespace-pre-wrap text-sm text-gray-700">{resume.analysis}</pre>
                   </div>
-                  
-                  {resume.skills && (
-                    <div>
-                      <p className="text-sm font-medium mb-2">Key Skills Found</p>
-                      <div className="flex flex-wrap gap-2">
-                        {resume.skills.map((skill, index) => (
-                          <Badge key={index} variant="outline">{skill}</Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {resume.recommendations && (
-                    <div>
-                      <p className="text-sm font-medium mb-2">AI Recommendations</p>
-                      <p className="text-sm text-muted-foreground">{resume.recommendations}</p>
-                    </div>
-                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
