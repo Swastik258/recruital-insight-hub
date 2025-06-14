@@ -29,6 +29,9 @@ export const useProfile = () => {
 
     try {
       setLoading(true);
+      setError(null);
+      console.log('Fetching profile for user:', user.id);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -39,6 +42,7 @@ export const useProfile = () => {
         console.error('Error fetching profile:', error);
         setError(error.message);
       } else {
+        console.log('Profile fetched successfully:', data);
         setProfile(data);
       }
     } catch (err) {
