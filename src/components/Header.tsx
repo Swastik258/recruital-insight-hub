@@ -24,6 +24,11 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
     navigate('/');
   };
 
+  const handleSettingsClick = () => {
+    setIsProfileOpen(false);
+    navigate('/settings');
+  };
+
   const navigationItems = [
     { id: 'resume', label: 'Resume Screening' },
     { id: 'interview', label: 'Interview Questions' },
@@ -55,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-8">
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-gray-900 cursor-pointer" onClick={() => navigate('/dashboard')}>
               week-hr
             </h1>
             <nav className="hidden md:flex space-x-6">
@@ -102,7 +107,7 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
                     <User className="mr-2 h-4 w-4" />
                     Profile
                   </Button>
-                  <Button variant="ghost" className="justify-start">
+                  <Button variant="ghost" className="justify-start" onClick={handleSettingsClick}>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Button>
