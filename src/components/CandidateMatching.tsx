@@ -96,7 +96,7 @@ export const CandidateMatching: React.FC = () => {
 
   const [selectedJob, setSelectedJob] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [experienceFilter, setExperienceFilter] = useState<string>('');
+  const [experienceFilter, setExperienceFilter] = useState<string>('all');
   const [matchedCandidates, setMatchedCandidates] = useState<Candidate[]>([]);
   const [isMatching, setIsMatching] = useState(false);
 
@@ -105,9 +105,13 @@ export const CandidateMatching: React.FC = () => {
     candidate.skills.some(skill => 
       skill.toLowerCase().includes(searchTerm.toLowerCase())
     )
-  ).filter(candidate =>
-    experienceFilter === '' || candidate.experience.includes(experienceFilter)
-  );
+  ).filter(candidate => {
+    if (experienceFilter === 'all') return true;
+    if (experienceFilter === '1-2') return candidate.experience.includes('1') || candidate.experience.includes('2');
+    if (experienceFilter === '3-5') return candidate.experience.includes('3') || candidate.experience.includes('4') || candidate.experience.includes('5');
+    if (experienceFilter === '5+') return parseInt(candidate.experience) >= 5;
+    return true;
+  });
 
   const handleMatchCandidates = () => {
     if (!selectedJob) {
@@ -254,7 +258,7 @@ export const CandidateMatching: React.FC = () => {
                     <SelectValue placeholder="Any experience" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any experience</SelectItem>
+                    <SelectItem value="all">Any experience</SelectItem>
                     <SelectItem value="1-2">1-2 years</SelectItem>
                     <SelectItem value="3-5">3-5 years</SelectItem>
                     <SelectItem value="5+">5+ years</SelectItem>
