@@ -2,405 +2,317 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MessageSquare, Loader2, Copy, Save, Brain, Code } from 'lucide-react';
-import { generateBehavioralQuestions, generateTechnicalQuestions } from '@/utils/geminiApi';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { MessageSquare, Sparkles, Users, Target, AlertCircle, CheckCircle, Copy, Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { generateInterviewQuestions } from '@/utils/geminiApi';
 
-export const InterviewQuestions = () => {
-  const [selectedRole, setSelectedRole] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('');
-  const [industry, setIndustry] = useState('');
-  const [companySize, setCompanySize] = useState('');
-  const [companyCulture, setCompanyCulture] = useState('');
-  const [technicalSkills, setTechnicalSkills] = useState('');
-  const [companyTechStack, setCompanyTechStack] = useState('');
-  const [behavioralQuestions, setBehavioralQuestions] = useState('');
-  const [technicalQuestions, setTechnicalQuestions] = useState('');
-  const [isGeneratingBehavioral, setIsGeneratingBehavioral] = useState(false);
-  const [isGeneratingTechnical, setIsGeneratingTechnical] = useState(false);
+export const InterviewQuestions: React.FC = () => {
+  const [jobDescription, setJobDescription] = useState('');
+  const [questions, setQuestions] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const jobRoles = [
-    'Software Engineer', 'Product Manager', 'Data Scientist', 'UX/UI Designer',
-    'Sales Manager', 'Marketing Manager', 'HR Manager', 'Business Analyst',
-    'DevOps Engineer', 'Customer Success Manager', 'Project Manager',
-    'Quality Assurance Engineer', 'Financial Analyst', 'Operations Manager'
-  ];
-
-  const experienceLevels = [
-    'Entry Level (0-2 years)', 'Mid Level (3-5 years)',
-    'Senior Level (6-10 years)', 'Lead/Principal (10+ years)'
-  ];
-
-  const industries = [
-    'Technology', 'Healthcare', 'Finance', 'Education', 'Retail',
-    'Manufacturing', 'Consulting', 'Media', 'Non-profit', 'Government'
-  ];
-
-  const companySizes = [
-    'Startup (1-50)', 'Small (51-200)', 'Medium (201-1000)',
-    'Large (1000-5000)', 'Enterprise (5000+)'
-  ];
-
-  const handleGenerateBehavioral = async () => {
-    if (!selectedRole || !selectedLevel || !industry || !companySize || !companyCulture) {
-      alert('Please fill in all company context fields');
+  const handleGenerate = async () => {
+    if (!jobDescription.trim()) {
+      toast({
+        title: "Input Required",
+        description: "Please enter a job description first.",
+        variant: "destructive",
+      });
       return;
     }
 
-    setIsGeneratingBehavioral(true);
+    setIsLoading(true);
     try {
-      const questions = await generateBehavioralQuestions(
-        selectedRole, industry, selectedLevel, companySize, companyCulture
-      );
-      setBehavioralQuestions(questions);
+      const generatedQuestions = await generateInterviewQuestions(jobDescription);
+      setQuestions(generatedQuestions);
+      toast({
+        title: "Questions Generated Successfully",
+        description: "Your behavioral interview questions are ready!",
+      });
     } catch (error) {
-      console.error('Error generating behavioral questions:', error);
-      alert('Error generating questions. Please try again.');
+      console.error('Error generating questions:', error);
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate interview questions. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsGeneratingBehavioral(false);
+      setIsLoading(false);
     }
   };
 
-  const handleGenerateTechnical = async () => {
-    if (!selectedRole || !selectedLevel || !technicalSkills) {
-      alert('Please fill in technical role, experience level, and required skills');
-      return;
-    }
-
-    setIsGeneratingTechnical(true);
-    try {
-      const skillsArray = technicalSkills.split(',').map(skill => skill.trim());
-      const questions = await generateTechnicalQuestions(
-        selectedRole, skillsArray, selectedLevel, companyTechStack
-      );
-      setTechnicalQuestions(questions);
-    } catch (error) {
-      console.error('Error generating technical questions:', error);
-      alert('Error generating questions. Please try again.');
-    } finally {
-      setIsGeneratingTechnical(false);
-    }
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(questions);
+    toast({
+      title: "Copied to Clipboard",
+      description: "Interview questions copied successfully!",
+    });
   };
 
-  const copyToClipboard = (content: string) => {
-    navigator.clipboard.writeText(content);
-    alert('Questions copied to clipboard!');
-  };
-
-  const saveQuestions = (content: string, type: string) => {
-    const blob = new Blob([content], { type: 'text/plain' });
+  const downloadQuestions = () => {
+    const blob = new Blob([questions], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${type}-interview-questions-${selectedRole.replace(/\s+/g, '-').toLowerCase()}.txt`;
+    a.download = 'interview-questions.txt';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    toast({
+      title: "Download Started",
+      description: "Interview questions file downloaded!",
+    });
   };
 
+  const parseQuestions = (questionsText: string) => {
+    if (!questionsText) return null;
+
+    const sections = questionsText.split(/\*\*\d+\.\s+/).filter(Boolean);
+    const parsedSections = sections.map((section, index) => {
+      const lines = section.split('\n').filter(line => line.trim());
+      const title = lines[0]?.replace(/\*\*/g, '').trim();
+      
+      let questions = [];
+      let currentQuestion = null;
+      let assessingCriteria = [];
+      let goodAnswers = [];
+      let redFlags = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        
+        if (line.startsWith('* **Question:**')) {
+          if (currentQuestion) {
+            questions.push({
+              question: currentQuestion,
+              assessing: assessingCriteria,
+              goodAnswers: goodAnswers,
+              redFlags: redFlags
+            });
+          }
+          currentQuestion = line.replace('* **Question:**', '').trim();
+          assessingCriteria = [];
+          goodAnswers = [];
+          redFlags = [];
+        } else if (line.startsWith('* **Assessing:**')) {
+          assessingCriteria.push(line.replace('* **Assessing:**', '').trim());
+        } else if (line.startsWith('* **Good Answer Indicators:**')) {
+          goodAnswers.push(line.replace('* **Good Answer Indicators:**', '').trim());
+        } else if (line.startsWith('* **Red Flag Responses:**')) {
+          redFlags.push(line.replace('* **Red Flag Responses:**', '').trim());
+        } else if (line.startsWith('*') && currentQuestion) {
+          if (line.includes('Good Answer Indicators')) {
+            goodAnswers.push(line.replace(/^\*\s*/, '').trim());
+          } else if (line.includes('Red Flag')) {
+            redFlags.push(line.replace(/^\*\s*/, '').trim());
+          } else {
+            assessingCriteria.push(line.replace(/^\*\s*/, '').trim());
+          }
+        }
+      }
+
+      if (currentQuestion) {
+        questions.push({
+          question: currentQuestion,
+          assessing: assessingCriteria,
+          goodAnswers: goodAnswers,
+          redFlags: redFlags
+        });
+      }
+
+      return {
+        title,
+        questions
+      };
+    });
+
+    return parsedSections;
+  };
+
+  const parsedQuestions = parseQuestions(questions);
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Advanced Interview Question Generator</h1>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center">
+        <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 rounded-full px-4 py-2 mb-4">
+          <MessageSquare className="h-4 w-4" />
+          <span className="text-sm font-semibold">Interview Questions Generator</span>
+        </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          AI-Powered Behavioral Interview Questions
+        </h1>
+        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Generate comprehensive behavioral interview questions tailored to your job requirements
+        </p>
       </div>
 
-      <Tabs defaultValue="behavioral" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="behavioral">Behavioral Questions</TabsTrigger>
-          <TabsTrigger value="technical">Technical Questions</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="behavioral" className="space-y-6">
-          {/* Behavioral Configuration */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Behavioral Interview Configuration</CardTitle>
-              <CardDescription>Configure context for comprehensive behavioral questions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Job Role</Label>
-                  <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a job role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {jobRoles.map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Experience Level</Label>
-                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select experience level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {experienceLevels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Industry</Label>
-                  <Select value={industry} onValueChange={setIndustry}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select industry" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {industries.map((ind) => (
-                        <SelectItem key={ind} value={ind}>
-                          {ind}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Company Size</Label>
-                  <Select value={companySize} onValueChange={setCompanySize}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select company size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companySizes.map((size) => (
-                        <SelectItem key={size} value={size}>
-                          {size}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="culture">Company Culture Description</Label>
-                <Input
-                  id="culture"
-                  placeholder="e.g., Collaborative, innovative, fast-paced, data-driven..."
-                  value={companyCulture}
-                  onChange={(e) => setCompanyCulture(e.target.value)}
-                />
-              </div>
-              <Button 
-                onClick={handleGenerateBehavioral} 
-                disabled={isGeneratingBehavioral || !selectedRole || !selectedLevel || !industry}
-                className="w-full"
-              >
-                {isGeneratingBehavioral ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Behavioral Questions...
-                  </>
-                ) : (
-                  <>
-                    <Brain className="mr-2 h-4 w-4" />
-                    Generate Behavioral Questions
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Behavioral Questions Results */}
-          {behavioralQuestions && (
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Behavioral Interview Questions</CardTitle>
-                    <CardDescription>
-                      Questions for {selectedRole} - {selectedLevel} in {industry}
-                    </CardDescription>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(behavioralQuestions)}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => saveQuestions(behavioralQuestions, 'behavioral')}>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">
-                    {behavioralQuestions}
-                  </pre>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="technical" className="space-y-6">
-          {/* Technical Configuration */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Technical Interview Configuration</CardTitle>
-              <CardDescription>Configure technical requirements and skills assessment</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Technical Role</Label>
-                  <Select value={selectedRole} onValueChange={setSelectedRole}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select technical role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {jobRoles.filter(role => 
-                        role.includes('Engineer') || role.includes('Developer') || 
-                        role.includes('Scientist') || role.includes('Analyst')
-                      ).map((role) => (
-                        <SelectItem key={role} value={role}>
-                          {role}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Experience Level</Label>
-                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select experience level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {experienceLevels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tech-skills">Required Technical Skills</Label>
-                <Input
-                  id="tech-skills"
-                  placeholder="e.g., React, TypeScript, Node.js, Python, AWS, Docker..."
-                  value={technicalSkills}
-                  onChange={(e) => setTechnicalSkills(e.target.value)}
-                />
-                <p className="text-xs text-gray-500">Separate skills with commas</p>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tech-stack">Company Tech Stack (Optional)</Label>
-                <Input
-                  id="tech-stack"
-                  placeholder="e.g., React, Node.js, PostgreSQL, AWS, Kubernetes..."
-                  value={companyTechStack}
-                  onChange={(e) => setCompanyTechStack(e.target.value)}
-                />
-              </div>
-              <Button 
-                onClick={handleGenerateTechnical} 
-                disabled={isGeneratingTechnical || !selectedRole || !selectedLevel || !technicalSkills}
-                className="w-full"
-              >
-                {isGeneratingTechnical ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Generating Technical Questions...
-                  </>
-                ) : (
-                  <>
-                    <Code className="mr-2 h-4 w-4" />
-                    Generate Technical Questions
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Technical Questions Results */}
-          {technicalQuestions && (
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Technical Interview Questions</CardTitle>
-                    <CardDescription>
-                      Questions for {selectedRole} - {selectedLevel}
-                    </CardDescription>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => copyToClipboard(technicalQuestions)}>
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copy
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => saveQuestions(technicalQuestions, 'technical')}>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-gray-50 p-4 rounded-lg max-h-96 overflow-y-auto">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">
-                    {technicalQuestions}
-                  </pre>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      {/* Interview Guidelines */}
-      <Card>
+      {/* Input Section */}
+      <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-blue-50">
         <CardHeader>
-          <CardTitle>Interview Best Practices</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5 text-blue-600" />
+            Job Description Input
+          </CardTitle>
+          <CardDescription>
+            Paste your job description below to generate targeted behavioral interview questions
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-4 text-sm">
-            <div className="space-y-2">
-              <h3 className="font-semibold text-blue-600">Behavioral Assessment</h3>
-              <ul className="text-gray-600 space-y-1">
-                <li>• Use STAR method evaluation</li>
-                <li>• Focus on specific examples</li>
-                <li>• Assess cultural fit</li>
-                <li>• Probe for details</li>
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold text-green-600">Technical Evaluation</h3>
-              <ul className="text-gray-600 space-y-1">
-                <li>• Problem-solving approach</li>
-                <li>• Code quality and structure</li>
-                <li>• System design thinking</li>
-                <li>• Learning ability</li>
-              </ul>
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold text-purple-600">Legal Compliance</h3>
-              <ul className="text-gray-600 space-y-1">
-                <li>• Avoid discriminatory questions</li>
-                <li>• Focus on job-related skills</li>
-                <li>• Consistent evaluation criteria</li>
-                <li>• Document decisions</li>
-              </ul>
-            </div>
-          </div>
+        <CardContent className="space-y-4">
+          <Textarea
+            placeholder="Enter the job description, required skills, and responsibilities..."
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            rows={6}
+            className="resize-none border-blue-200 focus:border-blue-400"
+          />
+          <Button 
+            onClick={handleGenerate} 
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            size="lg"
+          >
+            {isLoading ? (
+              <>
+                <Sparkles className="mr-2 h-4 w-4 animate-spin" />
+                Generating Questions...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate Interview Questions
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
+
+      {/* Results Section */}
+      {questions && (
+        <div className="space-y-6">
+          {/* Action Buttons */}
+          <div className="flex justify-center gap-4">
+            <Button onClick={copyToClipboard} variant="outline" className="gap-2">
+              <Copy className="h-4 w-4" />
+              Copy All
+            </Button>
+            <Button onClick={downloadQuestions} variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+          </div>
+
+          {/* Parsed Questions Display */}
+          {parsedQuestions && parsedQuestions.length > 0 ? (
+            <div className="space-y-6">
+              {parsedQuestions.map((section, sectionIndex) => (
+                <Card key={sectionIndex} className="shadow-lg border-0 overflow-hidden">
+                  <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                      <Users className="h-5 w-5" />
+                      {section.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-6">
+                    {section.questions.map((q, qIndex) => (
+                      <div key={qIndex} className="space-y-4">
+                        <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                          <h4 className="font-semibold text-gray-900 mb-2 flex items-start gap-2">
+                            <MessageSquare className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                            {q.question}
+                          </h4>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-4">
+                          {/* Assessing */}
+                          {q.assessing.length > 0 && (
+                            <div className="space-y-2">
+                              <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                                <Target className="h-3 w-3 mr-1" />
+                                Assessing
+                              </Badge>
+                              <ul className="text-sm text-gray-700 space-y-1">
+                                {q.assessing.map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <div className="w-1.5 h-1.5 bg-purple-400 rounded-full mt-2 flex-shrink-0"></div>
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Good Indicators */}
+                          {q.goodAnswers.length > 0 && (
+                            <div className="space-y-2">
+                              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Good Indicators
+                              </Badge>
+                              <ul className="text-sm text-gray-700 space-y-1">
+                                {q.goodAnswers.map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <div className="w-1.5 h-1.5 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {/* Red Flags */}
+                          {q.redFlags.length > 0 && (
+                            <div className="space-y-2">
+                              <Badge variant="secondary" className="bg-red-100 text-red-800">
+                                <AlertCircle className="h-3 w-3 mr-1" />
+                                Red Flags
+                              </Badge>
+                              <ul className="text-sm text-gray-700 space-y-1">
+                                {q.redFlags.map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <div className="w-1.5 h-1.5 bg-red-400 rounded-full mt-2 flex-shrink-0"></div>
+                                    {item}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+
+                        {qIndex < section.questions.length - 1 && (
+                          <Separator className="my-4" />
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            /* Fallback Raw Text Display */
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Generated Interview Questions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono leading-relaxed">
+                    {questions}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
     </div>
   );
 };
