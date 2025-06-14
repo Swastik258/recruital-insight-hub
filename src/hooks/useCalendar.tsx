@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,7 +13,7 @@ interface CalendarEvent {
   end_time: string;
   event_type: string;
   location: string | null;
-  attendees: any[];
+  attendees: string[] | null;
   is_recurring: boolean | null;
   recurrence_pattern: string | null;
   recurrence_end_date: string | null;
@@ -65,7 +64,12 @@ export const useCalendar = () => {
         console.error('Error fetching events:', error);
         setError(error.message);
       } else {
-        setEvents(data || []);
+        // Transform the data to ensure attendees is properly typed
+        const transformedEvents = (data || []).map(event => ({
+          ...event,
+          attendees: Array.isArray(event.attendees) ? event.attendees : (event.attendees ? [event.attendees] : [])
+        }));
+        setEvents(transformedEvents);
       }
     } catch (err) {
       console.error('Error:', err);
