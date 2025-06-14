@@ -12,6 +12,7 @@ export const InterviewQuestions: React.FC = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [questions, setQuestions] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (!jobDescription.trim()) {
