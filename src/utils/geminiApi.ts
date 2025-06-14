@@ -1,6 +1,6 @@
 
 const GEMINI_API_KEY = 'AIzaSyCHKp7O2KzlRUqFkqB8DobMdksXybdov2A';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 interface GeminiResponse {
   candidates: Array<{
