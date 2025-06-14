@@ -8,29 +8,112 @@ import { PerformanceEvaluator } from '@/components/PerformanceEvaluator';
 import { CandidateMatching } from '@/components/CandidateMatching';
 import { TeamCollaboration } from '@/components/team/TeamCollaboration';
 import { CalendarIntegration } from '@/components/calendar/CalendarIntegration';
+import { FeaturePaywall } from '@/components/FeaturePaywall';
+import { FeatureSelector } from '@/components/FeatureSelector';
 import { Footer } from '@/components/Footer';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const Index = () => {
-  const [activeSection, setActiveSection] = useState('resume');
+  const [activeSection, setActiveSection] = useState('dashboard');
+  const { subscription } = useSubscription();
+
+  const handleFeatureSelect = (feature: string) => {
+    setActiveSection(feature);
+  };
 
   const renderActiveSection = () => {
     switch (activeSection) {
-      case 'resume':
-        return <ResumeScreening />;
-      case 'interview':
-        return <InterviewQuestions />;
-      case 'job-description':
-        return <JobDescriptionOptimizer />;
-      case 'performance':
-        return <PerformanceEvaluator />;
-      case 'matching':
-        return <CandidateMatching />;
-      case 'team':
-        return <TeamCollaboration />;
-      case 'calendar':
-        return <CalendarIntegration />;
+      case 'dashboard':
+        return (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                HR Management Dashboard
+              </h1>
+              <p className="text-lg text-gray-600">
+                Choose the features you need and pay only for what you use
+              </p>
+            </div>
+            <FeatureSelector onFeatureSelect={handleFeatureSelect} />
+          </div>
+        );
+      case 'resumeScreening':
+        return (
+          <FeaturePaywall 
+            feature="Resume Screening" 
+            featureKey="resumeScreening"
+          >
+            <ResumeScreening />
+          </FeaturePaywall>
+        );
+      case 'interviewQuestions':
+        return (
+          <FeaturePaywall 
+            feature="Interview Questions" 
+            featureKey="interviewQuestions"
+          >
+            <InterviewQuestions />
+          </FeaturePaywall>
+        );
+      case 'jobDescriptionOptimizer':
+        return (
+          <FeaturePaywall 
+            feature="Job Description Optimizer" 
+            featureKey="jobDescriptionOptimizer"
+          >
+            <JobDescriptionOptimizer />
+          </FeaturePaywall>
+        );
+      case 'performanceEvaluator':
+        return (
+          <FeaturePaywall 
+            feature="Performance Evaluation" 
+            featureKey="performanceEvaluator"
+          >
+            <PerformanceEvaluator />
+          </FeaturePaywall>
+        );
+      case 'candidateMatching':
+        return (
+          <FeaturePaywall 
+            feature="Candidate Matching" 
+            featureKey="candidateMatching"
+          >
+            <CandidateMatching />
+          </FeaturePaywall>
+        );
+      case 'teamCollaboration':
+        return (
+          <FeaturePaywall 
+            feature="Team Collaboration" 
+            featureKey="teamCollaboration"
+          >
+            <TeamCollaboration />
+          </FeaturePaywall>
+        );
+      case 'calendarIntegration':
+        return (
+          <FeaturePaywall 
+            feature="Calendar Integration" 
+            featureKey="calendarIntegration"
+          >
+            <CalendarIntegration />
+          </FeaturePaywall>
+        );
       default:
-        return <ResumeScreening />;
+        return (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                HR Management Dashboard
+              </h1>
+              <p className="text-lg text-gray-600">
+                Choose the features you need and pay only for what you use
+              </p>
+            </div>
+            <FeatureSelector onFeatureSelect={handleFeatureSelect} />
+          </div>
+        );
     }
   };
 

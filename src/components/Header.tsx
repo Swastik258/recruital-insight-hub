@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Settings, LogOut, User } from 'lucide-react';
+import { Settings, LogOut, User, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useSubscription } from '@/hooks/useSubscription';
 import { TeamSwitcher } from './team/TeamSwitcher';
 
 interface HeaderProps {
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
+  const { hasFeatureAccess } = useSubscription();
 
   const handleLogout = async () => {
     await signOut();
@@ -31,12 +33,14 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
   };
 
   const navigationItems = [
-    { id: 'resume', label: 'Resume Screening' },
-    { id: 'interview', label: 'Interview Questions' },
-    { id: 'job-description', label: 'Job Descriptions' },
-    { id: 'performance', label: 'Performance Evaluation' },
-    { id: 'matching', label: 'Candidate Matching' },
-    { id: 'team', label: 'Team Collaboration' },
+    { id: 'dashboard', label: 'Dashboard', icon: Home, alwaysVisible: true },
+    { id: 'resumeScreening', label: 'Resume Screening', featureKey: 'resumeScreening' },
+    { id: 'interviewQuestions', label: 'Interview Questions', featureKey: 'interviewQuestions' },
+    { id: 'jobDescriptionOptimizer', label: 'Job Descriptions', featureKey: 'jobDescriptionOptimizer' },
+    { id: 'performanceEvaluator', label: 'Performance', featureKey: 'performanceEvaluator' },
+    { id: 'candidateMatching', label: 'Matching', featureKey: 'candidateMatching' },
+    { id: 'teamCollaboration', label: 'Team', featureKey: 'teamCollaboration' },
+    { id: 'calendarIntegration', label: 'Calendar', featureKey: 'calendarIntegration' },
   ];
 
   const getInitials = () => {
@@ -62,20 +66,25 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-8">
-            <h1 className="text-2xl font-bold text-gray-900 cursor-pointer" onClick={() => navigate('/dashboard')}>
+            <h1 className="text-2xl font-bold text-gray-900 cursor-pointer" onClick={() => setActiveSection('dashboard')}>
               week-hr
             </h1>
             <nav className="hidden md:flex space-x-6">
-              {navigationItems.map((item) => (
-                <Button
-                  key={item.id}
-                  variant={activeSection === item.id ? 'default' : 'ghost'}
-                  onClick={() => setActiveSection(item.id)}
-                  className="text-sm"
-                >
-                  {item.label}
-                </Button>
-              ))}
+              {navigationItems.map((item) => {
+                const hasAccess = item.alwaysVisible || hasFeatureAccess(item.featureKey as any);
+                return (
+                  <Button
+                    key={item.id}
+                    variant={activeSection === item.id ? 'default' : 'ghost'}
+                    onClick={() => setActiveSection(item.id)}
+                    className={`text-sm ${!hasAccess ? 'opacity-50' : ''}`}
+                  >
+                    {item.icon && <item.icon className="h-4 w-4 mr-2" />}
+                    {item.label}
+                    {!hasAccess && !item.alwaysVisible && ' 🔒'}
+                  </Button>
+                );
+              })}
             </nav>
           </div>
 
