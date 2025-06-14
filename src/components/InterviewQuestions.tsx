@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +12,6 @@ export const InterviewQuestions: React.FC = () => {
   const [jobDescription, setJobDescription] = useState('');
   const [questions, setQuestions] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (!jobDescription.trim()) {
