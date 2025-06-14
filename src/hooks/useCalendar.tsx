@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,9 +66,11 @@ export const useCalendar = () => {
         setError(error.message);
       } else {
         // Transform the data to ensure attendees is properly typed
-        const transformedEvents = (data || []).map(event => ({
+        const transformedEvents: CalendarEvent[] = (data || []).map(event => ({
           ...event,
-          attendees: Array.isArray(event.attendees) ? event.attendees : (event.attendees ? [event.attendees] : [])
+          attendees: Array.isArray(event.attendees) 
+            ? event.attendees.filter((item): item is string => typeof item === 'string')
+            : null
         }));
         setEvents(transformedEvents);
       }
