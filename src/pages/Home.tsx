@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -156,8 +155,8 @@ const Home = () => {
 
   const pricingPlans = [
     {
-      name: "Starter",
-      price: "$29",
+      name: "Basic",
+      price: "₹99",
       period: "/month",
       description: "Perfect for small teams getting started",
       features: [
@@ -168,11 +167,12 @@ const Home = () => {
         "Basic analytics"
       ],
       buttonText: "Start Free Trial",
-      popular: false
+      popular: false,
+      planId: "basic"
     },
     {
       name: "Professional",
-      price: "$79",
+      price: "₹599",
       period: "/month",
       description: "Ideal for growing HR departments",
       features: [
@@ -185,11 +185,12 @@ const Home = () => {
         "API access"
       ],
       buttonText: "Start Free Trial",
-      popular: true
+      popular: true,
+      planId: "professional"
     },
     {
       name: "Enterprise",
-      price: "$199",
+      price: "₹999",
       period: "/month",
       description: "For large organizations with complex needs",
       features: [
@@ -202,9 +203,15 @@ const Home = () => {
         "On-premise deployment"
       ],
       buttonText: "Contact Sales",
-      popular: false
+      popular: false,
+      planId: "enterprise"
     }
   ];
+
+  const handleSubscribe = (planId: string) => {
+    // Redirect to payment page with plan information
+    window.location.href = `/payment?plan=${planId}`;
+  };
 
   // Pagination logic
   const totalTestimonialPages = Math.ceil(testimonials.length / testimonialsPerPage);
@@ -494,14 +501,13 @@ const Home = () => {
                     </ul>
                   </CardContent>
                   <CardFooter>
-                    <Link to="/signup" className="w-full">
-                      <Button 
-                        className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                        variant={plan.popular ? 'default' : 'outline'}
-                      >
-                        {plan.buttonText}
-                      </Button>
-                    </Link>
+                    <Button 
+                      onClick={() => handleSubscribe(plan.planId)}
+                      className={`w-full ${plan.popular ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                      variant={plan.popular ? 'default' : 'outline'}
+                    >
+                      {plan.buttonText}
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
