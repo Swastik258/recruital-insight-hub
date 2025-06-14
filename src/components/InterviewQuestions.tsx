@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +26,7 @@ export const InterviewQuestions: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const generatedQuestions = await generateInterviewQuestions(jobDescription);
+      const generatedQuestions = await generateInterviewQuestions(jobDescription, 'behavioral');
       setQuestions(generatedQuestions);
       toast({
         title: "Questions Generated Successfully",
