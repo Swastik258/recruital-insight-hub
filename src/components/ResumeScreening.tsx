@@ -5,7 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, FileText, CheckCircle, AlertCircle, Loader2, BarChart3, Users } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Upload, FileText, CheckCircle, AlertCircle, Loader2, BarChart3, Users, Award, AlertTriangle, Target, TrendingUp, Brain, FileCheck } from 'lucide-react';
 import { analyzeResume, rankResumes } from '@/utils/geminiApi';
 
 interface Resume {
@@ -16,6 +18,12 @@ interface Resume {
   score?: number;
   analysis?: string;
   file?: File;
+}
+
+interface AnalysisSection {
+  title: string;
+  content: string;
+  type: 'score' | 'list' | 'text' | 'recommendation';
 }
 
 export const ResumeScreening = () => {
@@ -40,6 +48,134 @@ export const ResumeScreening = () => {
       };
       setResumes(prev => [...prev, newResume]);
     });
+  };
+
+  const parseAnalysis = (analysisText: string): AnalysisSection[] => {
+    const sections: AnalysisSection[] = [];
+    const lines = analysisText.split('\n');
+    let currentSection = '';
+    let currentContent = '';
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        // Save previous section
+        if (currentSection && currentContent) {
+          sections.push({
+            title: currentSection,
+            content: currentContent.trim(),
+            type: getAnalysisType(currentSection)
+          });
+        }
+        
+        // Start new section
+        currentSection = trimmedLine.replace(/\*\*/g, '');
+        currentContent = '';
+      } else if (trimmedLine) {
+        currentContent += line + '\n';
+      }
+    }
+    
+    // Add last section
+    if (currentSection && currentContent) {
+      sections.push({
+        title: currentSection,
+        content: currentContent.trim(),
+        type: getAnalysisType(currentSection)
+      });
+    }
+    
+    return sections;
+  };
+
+  const getAnalysisType = (title: string): 'score' | 'list' | 'text' | 'recommendation' => {
+    if (title.toLowerCase().includes('score')) return 'score';
+    if (title.toLowerCase().includes('recommendation')) return 'recommendation';
+    if (title.toLowerCase().includes('skills') || title.toLowerCase().includes('strengths') || title.toLowerCase().includes('concerns')) return 'list';
+    return 'text';
+  };
+
+  const getSectionIcon = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle.includes('score')) return <Target className="h-5 w-5 text-blue-500" />;
+    if (lowerTitle.includes('strengths')) return <TrendingUp className="h-5 w-5 text-green-500" />;
+    if (lowerTitle.includes('skills') || lowerTitle.includes('qualifications')) return <Award className="h-5 w-5 text-purple-500" />;
+    if (lowerTitle.includes('concerns') || lowerTitle.includes('flags')) return <AlertTriangle className="h-5 w-5 text-red-500" />;
+    if (lowerTitle.includes('recommendation')) return <Brain className="h-5 w-5 text-orange-500" />;
+    if (lowerTitle.includes('optimization')) return <FileCheck className="h-5 w-5 text-indigo-500" />;
+    return <FileText className="h-5 w-5 text-gray-500" />;
+  };
+
+  const renderAnalysisContent = (section: AnalysisSection) => {
+    const { content, type } = section;
+    
+    if (type === 'score') {
+      const scoreMatch = content.match(/(\d+)/);
+      const score = scoreMatch ? parseInt(scoreMatch[1]) : 0;
+      return (
+        <div className="flex items-center space-x-4">
+          <div className={`text-3xl font-bold ${score >= 80 ? 'text-green-600' : score >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+            {score}%
+          </div>
+          <div className="flex-1">
+            <div className={`h-3 bg-gray-200 rounded-full overflow-hidden`}>
+              <div 
+                className={`h-full transition-all duration-500 ${score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+                style={{ width: `${score}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (type === 'recommendation') {
+      const recommendation = content.toLowerCase().includes('recommend') ? 'RECOMMEND' : 
+                           content.toLowerCase().includes('maybe') ? 'MAYBE' : 'REJECT';
+      const badgeColor = recommendation === 'RECOMMEND' ? 'bg-green-100 text-green-800' :
+                        recommendation === 'MAYBE' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800';
+      
+      return (
+        <div className="space-y-3">
+          <Badge className={`${badgeColor} text-sm font-semibold px-3 py-1`}>
+            {recommendation}
+          </Badge>
+          <p className="text-sm text-gray-700 leading-relaxed">{content}</p>
+        </div>
+      );
+    }
+    
+    if (type === 'list') {
+      const lines = content.split('\n').filter(line => line.trim());
+      return (
+        <div className="space-y-2">
+          {lines.map((line, index) => {
+            const trimmedLine = line.trim();
+            if (trimmedLine.startsWith('*') || trimmedLine.startsWith('-')) {
+              return (
+                <div key={index} className="flex items-start space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                  <p className="text-sm text-gray-700 leading-relaxed">{trimmedLine.substring(1).trim()}</p>
+                </div>
+              );
+            }
+            return (
+              <p key={index} className="text-sm text-gray-700 leading-relaxed font-medium">
+                {trimmedLine}
+              </p>
+            );
+          })}
+        </div>
+      );
+    }
+    
+    return (
+      <div className="prose prose-sm max-w-none">
+        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{content}</p>
+      </div>
+    );
   };
 
   const analyzeResumeWithAI = async (resumeId: string) => {
@@ -283,30 +419,61 @@ export const ResumeScreening = () => {
           {resumes.some(r => r.analysis) && (
             <Card>
               <CardHeader>
-                <CardTitle>Comprehensive Analysis Results</CardTitle>
+                <CardTitle className="flex items-center space-x-2">
+                  <Brain className="h-6 w-6 text-blue-600" />
+                  <span>Comprehensive Analysis Results</span>
+                </CardTitle>
                 <CardDescription>AI-powered resume analysis with actionable insights</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {resumes.filter(r => r.analysis).map((resume) => (
-                    <div key={resume.id} className="p-4 border rounded-lg">
-                      <h3 className="font-semibold mb-2 flex items-center">
-                        {resume.name}
-                        <span className={`ml-2 px-2 py-1 rounded text-xs font-medium ${
-                          resume.score && resume.score >= 80 ? 'bg-green-100 text-green-800' :
-                          resume.score && resume.score >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {resume.score}% Match
-                        </span>
-                      </h3>
-                      <div className="prose max-w-none">
-                        <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-3 rounded">
-                          {resume.analysis}
-                        </pre>
+                <div className="space-y-8">
+                  {resumes.filter(r => r.analysis).map((resume) => {
+                    const analysisData = parseAnalysis(resume.analysis || '');
+                    
+                    return (
+                      <div key={resume.id} className="space-y-6">
+                        {/* Resume Header */}
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900 mb-2">{resume.name}</h3>
+                              <p className="text-sm text-gray-600">Screening Report & Analysis</p>
+                            </div>
+                            <div className="text-right">
+                              <Badge className={`text-lg px-4 py-2 ${
+                                resume.score && resume.score >= 80 ? 'bg-green-100 text-green-800' :
+                                resume.score && resume.score >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-red-100 text-red-800'
+                              }`}>
+                                {resume.score}% Match
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Analysis Sections */}
+                        <div className="grid gap-6">
+                          {analysisData.map((section, index) => (
+                            <Card key={index} className="shadow-sm hover:shadow-md transition-shadow">
+                              <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center space-x-3 text-lg">
+                                  {getSectionIcon(section.title)}
+                                  <span>{section.title}</span>
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                {renderAnalysisContent(section)}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+
+                        {index < resumes.filter(r => r.analysis).length - 1 && (
+                          <Separator className="my-8" />
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
