@@ -7,6 +7,7 @@ import { Settings, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { TeamSwitcher } from './team/TeamSwitcher';
 
 interface HeaderProps {
   activeSection: string;
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
     { id: 'job-description', label: 'Job Descriptions' },
     { id: 'performance', label: 'Performance Evaluation' },
     { id: 'matching', label: 'Candidate Matching' },
+    { id: 'team', label: 'Team Collaboration' },
   ];
 
   const getInitials = () => {
@@ -77,48 +79,52 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
             </nav>
           </div>
 
-          <Popover open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg" alt="Profile" />
-                  <AvatarFallback>{getInitials()}</AvatarFallback>
-                </Avatar>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80" align="end">
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium leading-none">{getDisplayName()}</h4>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  {profile && (
-                    <div className="text-sm text-muted-foreground">
-                      <p className="text-xs mt-1">
-                        Member since {new Date(profile.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-                  {profileLoading && (
-                    <p className="text-sm text-muted-foreground">Loading profile...</p>
-                  )}
+          <div className="flex items-center space-x-4">
+            <TeamSwitcher />
+            
+            <Popover open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/placeholder.svg" alt="Profile" />
+                    <AvatarFallback>{getInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium leading-none">{getDisplayName()}</h4>
+                    <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    {profile && (
+                      <div className="text-sm text-muted-foreground">
+                        <p className="text-xs mt-1">
+                          Member since {new Date(profile.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+                    {profileLoading && (
+                      <p className="text-sm text-muted-foreground">Loading profile...</p>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Button variant="ghost" className="justify-start">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Button>
+                    <Button variant="ghost" className="justify-start" onClick={handleSettingsClick}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Button>
+                    <Button variant="ghost" className="justify-start" onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </Button>
+                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Button variant="ghost" className="justify-start">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Button>
-                  <Button variant="ghost" className="justify-start" onClick={handleSettingsClick}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Button>
-                  <Button variant="ghost" className="justify-start" onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
     </header>

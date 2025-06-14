@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Header } from '@/components/Header';
 import { ResumeScreening } from '@/components/ResumeScreening';
 import { InterviewQuestions } from '@/components/InterviewQuestions';
 import { JobDescriptionOptimizer } from '@/components/JobDescriptionOptimizer';
 import { PerformanceEvaluator } from '@/components/PerformanceEvaluator';
 import { CandidateMatching } from '@/components/CandidateMatching';
+import { TeamCollaboration } from '@/components/team/TeamCollaboration';
 import { Footer } from '@/components/Footer';
 
 const Index = () => {
@@ -23,15 +24,17 @@ const Index = () => {
         return <PerformanceEvaluator />;
       case 'matching':
         return <CandidateMatching />;
+      case 'team':
+        return <TeamCollaboration />;
       default:
         return <ResumeScreening />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50">
       <Header activeSection={activeSection} setActiveSection={setActiveSection} />
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8">
         {renderActiveSection()}
       </main>
       <Footer />
