@@ -1,12 +1,40 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import { Header } from '@/components/Header';
+import { ResumeScreening } from '@/components/ResumeScreening';
+import { InterviewQuestions } from '@/components/InterviewQuestions';
+import { JobDescriptionOptimizer } from '@/components/JobDescriptionOptimizer';
+import { PerformanceEvaluator } from '@/components/PerformanceEvaluator';
+import { CandidateMatching } from '@/components/CandidateMatching';
+import { Footer } from '@/components/Footer';
 
 const Index = () => {
+  const [activeSection, setActiveSection] = useState('resume');
+
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case 'resume':
+        return <ResumeScreening />;
+      case 'interview':
+        return <InterviewQuestions />;
+      case 'job-description':
+        return <JobDescriptionOptimizer />;
+      case 'performance':
+        return <PerformanceEvaluator />;
+      case 'matching':
+        return <CandidateMatching />;
+      default:
+        return <ResumeScreening />;
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header activeSection={activeSection} setActiveSection={setActiveSection} />
+      <main className="flex-1 container mx-auto px-4 py-8">
+        {renderActiveSection()}
+      </main>
+      <Footer />
     </div>
   );
 };
