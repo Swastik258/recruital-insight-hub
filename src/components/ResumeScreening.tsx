@@ -427,7 +427,7 @@ export const ResumeScreening = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-8">
-                  {resumes.filter(r => r.analysis).map((resume) => {
+                  {resumes.filter(r => r.analysis).map((resume, resumeIndex) => {
                     const analysisData = parseAnalysis(resume.analysis || '');
                     
                     return (
@@ -453,8 +453,8 @@ export const ResumeScreening = () => {
 
                         {/* Analysis Sections */}
                         <div className="grid gap-6">
-                          {analysisData.map((section, index) => (
-                            <Card key={index} className="shadow-sm hover:shadow-md transition-shadow">
+                          {analysisData.map((section, sectionIndex) => (
+                            <Card key={sectionIndex} className="shadow-sm hover:shadow-md transition-shadow">
                               <CardHeader className="pb-4">
                                 <CardTitle className="flex items-center space-x-3 text-lg">
                                   {getSectionIcon(section.title)}
@@ -468,7 +468,7 @@ export const ResumeScreening = () => {
                           ))}
                         </div>
 
-                        {index < resumes.filter(r => r.analysis).length - 1 && (
+                        {resumeIndex < resumes.filter(r => r.analysis).length - 1 && (
                           <Separator className="my-8" />
                         )}
                       </div>
