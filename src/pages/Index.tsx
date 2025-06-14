@@ -14,7 +14,7 @@ import { PrioritySupport } from '@/components/PrioritySupport';
 import { AdvancedAnalytics } from '@/components/AdvancedAnalytics';
 import { ApiAccess } from '@/components/ApiAccess';
 import { FeaturePaywall } from '@/components/FeaturePaywall';
-import { FeatureSelector } from '@/components/FeatureSelector';
+import { DashboardHome } from '@/components/DashboardHome';
 import { Footer } from '@/components/Footer';
 import { useSubscription } from '@/hooks/useSubscription';
 
@@ -29,19 +29,7 @@ const Index = () => {
   const renderActiveSection = () => {
     switch (activeSection) {
       case 'dashboard':
-        return (
-          <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                HR Management Dashboard
-              </h1>
-              <p className="text-lg text-gray-600">
-                Choose the features you need and pay only for what you use
-              </p>
-            </div>
-            <FeatureSelector onFeatureSelect={handleFeatureSelect} />
-          </div>
-        );
+        return <DashboardHome onFeatureSelect={handleFeatureSelect} />;
       case 'resumeScreening':
         return (
           <FeaturePaywall 
@@ -151,27 +139,17 @@ const Index = () => {
           </FeaturePaywall>
         );
       default:
-        return (
-          <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                HR Management Dashboard
-              </h1>
-              <p className="text-lg text-gray-600">
-                Choose the features you need and pay only for what you use
-              </p>
-            </div>
-            <FeatureSelector onFeatureSelect={handleFeatureSelect} />
-          </div>
-        );
+        return <DashboardHome onFeatureSelect={handleFeatureSelect} />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100">
       <Header activeSection={activeSection} setActiveSection={setActiveSection} />
-      <main className="container mx-auto px-4 py-8">
-        {renderActiveSection()}
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl">
+        <div className="animate-fade-in">
+          {renderActiveSection()}
+        </div>
       </main>
       <Footer />
     </div>
