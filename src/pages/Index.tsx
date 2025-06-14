@@ -7,6 +7,7 @@ import { JobDescriptionOptimizer } from '@/components/JobDescriptionOptimizer';
 import { PerformanceEvaluator } from '@/components/PerformanceEvaluator';
 import { CandidateMatching } from '@/components/CandidateMatching';
 import { TeamCollaboration } from '@/components/team/TeamCollaboration';
+import { CalendarIntegration } from '@/components/calendar/CalendarIntegration';
 import { Footer } from '@/components/Footer';
 
 const Index = () => {
@@ -26,6 +27,8 @@ const Index = () => {
         return <CandidateMatching />;
       case 'team':
         return <TeamCollaboration />;
+      case 'calendar':
+        return <CalendarIntegration />;
       default:
         return <ResumeScreening />;
     }
