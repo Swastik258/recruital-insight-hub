@@ -33,15 +33,19 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
   ];
 
   const getInitials = () => {
-    if (profile?.first_name && profile?.last_name) {
-      return `${profile.first_name[0]}${profile.last_name[0]}`;
+    if (profile?.full_name) {
+      const names = profile.full_name.split(' ');
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[names.length - 1][0]}`;
+      }
+      return profile.full_name[0];
     }
     return user?.email?.[0]?.toUpperCase() || 'U';
   };
 
   const getDisplayName = () => {
-    if (profile?.first_name && profile?.last_name) {
-      return `${profile.first_name} ${profile.last_name}`;
+    if (profile?.full_name) {
+      return profile.full_name;
     }
     return user?.email || 'User';
   };
@@ -84,7 +88,6 @@ export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection 
                   <p className="text-sm text-muted-foreground">{user?.email}</p>
                   {profile && (
                     <div className="text-sm text-muted-foreground">
-                      <p>{profile.job_title} at {profile.company}</p>
                       <p className="text-xs mt-1">
                         Member since {new Date(profile.created_at).toLocaleDateString()}
                       </p>

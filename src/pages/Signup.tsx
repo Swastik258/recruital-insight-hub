@@ -5,19 +5,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Zap } from 'lucide-react';
+import { Eye, EyeOff, Zap, Mail } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    company: '',
-    jobTitle: ''
+    confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -37,15 +35,12 @@ const Signup = () => {
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
     
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
     if (!formData.password) newErrors.password = 'Password is required';
     if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    if (!formData.company.trim()) newErrors.company = 'Company is required';
-    if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Job title is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -77,10 +72,7 @@ const Signup = () => {
 
     try {
       const { error } = await signUp(formData.email, formData.password, {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        company: formData.company,
-        job_title: formData.jobTitle
+        full_name: formData.fullName
       });
 
       if (error) {
@@ -94,7 +86,6 @@ const Signup = () => {
           title: "Account created successfully!",
           description: "Please check your email to verify your account."
         });
-        // Don't navigate immediately, wait for email verification
       }
     } catch (error) {
       toast({
@@ -104,6 +95,56 @@ const Signup = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Google Signup Failed",
+          description: error.message
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Google Signup Failed",
+        description: "There was an error signing up with Google."
+      });
+    }
+  };
+
+  const handleGitHubSignUp = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "GitHub Signup Failed",
+          description: error.message
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "GitHub Signup Failed",
+        description: "There was an error signing up with GitHub."
+      });
     }
   };
 
@@ -124,41 +165,48 @@ const Signup = () => {
           <CardHeader>
             <CardTitle>Sign Up</CardTitle>
             <CardDescription>
-              Fill in your details to get started with week-hr
+              Create your account to get started with week-hr
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Social Sign Up Buttons */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <Button variant="outline" onClick={handleGoogleSignUp} className="w-full">
+                <Mail className="mr-2 h-4 w-4" />
+                Google
+              </Button>
+              <Button variant="outline" onClick={handleGitHubSignUp} className="w-full">
+                <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clipRule="evenodd"></path>
+                </svg>
+                GitHub
+              </Button>
+            </div>
+
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    className={errors.firstName ? 'border-red-500' : ''}
-                    required
-                  />
-                  {errors.firstName && <p className="text-sm text-red-600">{errors.firstName}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    className={errors.lastName ? 'border-red-500' : ''}
-                    required
-                  />
-                  {errors.lastName && <p className="text-sm text-red-600">{errors.lastName}</p>}
-                </div>
+              {/* Full Name */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  placeholder="John Doe"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  className={errors.fullName ? 'border-red-500' : ''}
+                  required
+                />
+                {errors.fullName && <p className="text-sm text-red-600">{errors.fullName}</p>}
               </div>
 
               {/* Email */}
@@ -168,45 +216,13 @@ const Signup = () => {
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="john@company.com"
+                  placeholder="john@example.com"
                   value={formData.email}
                   onChange={handleInputChange}
                   className={errors.email ? 'border-red-500' : ''}
                   required
                 />
                 {errors.email && <p className="text-sm text-red-600">{errors.email}</p>}
-              </div>
-
-              {/* Company & Job Title */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
-                  <Input
-                    id="company"
-                    name="company"
-                    type="text"
-                    placeholder="Acme Corp"
-                    value={formData.company}
-                    onChange={handleInputChange}
-                    className={errors.company ? 'border-red-500' : ''}
-                    required
-                  />
-                  {errors.company && <p className="text-sm text-red-600">{errors.company}</p>}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="jobTitle">Job Title</Label>
-                  <Input
-                    id="jobTitle"
-                    name="jobTitle"
-                    type="text"
-                    placeholder="HR Manager"
-                    value={formData.jobTitle}
-                    onChange={handleInputChange}
-                    className={errors.jobTitle ? 'border-red-500' : ''}
-                    required
-                  />
-                  {errors.jobTitle && <p className="text-sm text-red-600">{errors.jobTitle}</p>}
-                </div>
               </div>
 
               {/* Password */}

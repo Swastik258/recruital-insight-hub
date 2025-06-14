@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -37,12 +36,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Handle successful email confirmation
-        if (event === 'SIGNED_IN' && session?.user && window.location.hash.includes('access_token')) {
-          // Clear the hash from URL
-          window.history.replaceState(null, '', window.location.pathname);
-          // Redirect to dashboard
-          window.location.href = '/dashboard';
+        // Handle successful authentication from OAuth or email confirmation
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Check if we're in an OAuth callback or email confirmation
+          const isOAuthCallback = window.location.hash.includes('access_token') || window.location.search.includes('code=');
+          
+          if (isOAuthCallback) {
+            // Clear URL parameters and redirect to dashboard
+            window.history.replaceState(null, '', window.location.pathname);
+            window.location.href = '/dashboard';
+          }
         }
       }
     );
