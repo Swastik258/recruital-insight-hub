@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,8 +83,10 @@ const Signup = () => {
       } else {
         toast({
           title: "Account created successfully!",
-          description: "Please check your email to verify your account."
+          description: "Welcome to week-hr! Redirecting to dashboard..."
         });
+        // Navigate to dashboard immediately after successful signup
+        navigate('/dashboard');
       }
     } catch (error) {
       toast({
