@@ -33,9 +33,9 @@ export const preloadResources = () => {
 export const measureWebVitals = async () => {
   if ('requestIdleCallback' in window) {
     try {
-      const { onCLS, onFID, onFCP, onLCP, onTTFB } = await import('web-vitals');
+      const { onCLS, onINP, onFCP, onLCP, onTTFB } = await import('web-vitals');
       onCLS(console.log);
-      onFID(console.log);
+      onINP(console.log); // Using onINP instead of onFID
       onFCP(console.log);
       onLCP(console.log);
       onTTFB(console.log);
