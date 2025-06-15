@@ -119,79 +119,6 @@ export const useTeams = () => {
     }
   };
 
-  const inviteTeamMember = async (teamId: string, userId: string, role: string = 'member') => {
-    try {
-      const { error } = await supabase
-        .from('team_members')
-        .insert({
-          team_id: teamId,
-          user_id: userId,
-          role: role
-        });
-
-      if (error) {
-        console.error('Error inviting team member:', error);
-        setError(error.message);
-        return false;
-      }
-
-      await fetchTeamMembers(teamId);
-      return true;
-    } catch (err) {
-      console.error('Error inviting member:', err);
-      setError('Failed to invite team member');
-      return false;
-    }
-  };
-
-  const updateMemberRole = async (memberId: string, newRole: string) => {
-    try {
-      const { error } = await supabase
-        .from('team_members')
-        .update({ role: newRole })
-        .eq('id', memberId);
-
-      if (error) {
-        console.error('Error updating member role:', error);
-        setError(error.message);
-        return false;
-      }
-
-      if (currentTeam) {
-        await fetchTeamMembers(currentTeam.id);
-      }
-      return true;
-    } catch (err) {
-      console.error('Error updating role:', err);
-      setError('Failed to update member role');
-      return false;
-    }
-  };
-
-  const removeTeamMember = async (memberId: string) => {
-    try {
-      const { error } = await supabase
-        .from('team_members')
-        .delete()
-        .eq('id', memberId);
-
-      if (error) {
-        console.error('Error removing team member:', error);
-        setError(error.message);
-        return false;
-      }
-
-      if (currentTeam) {
-        await fetchTeamMembers(currentTeam.id);
-      }
-      return true;
-    } catch (err) {
-      console.error('Error removing member:', err);
-      setError('Failed to remove team member');
-      return false;
-    }
-  };
-
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -217,9 +144,6 @@ export const useTeams = () => {
     loading,
     error,
     switchTeam,
-    inviteTeamMember,
-    updateMemberRole,
-    removeTeamMember,
     refetchTeams: fetchTeams,
     refetchCurrentTeam: fetchCurrentTeam
   };

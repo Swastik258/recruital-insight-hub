@@ -42,7 +42,7 @@ export const EventForm: React.FC<EventFormProps> = ({ eventId, onClose, onSucces
       setFormData({
         title: existingEvent.title,
         description: existingEvent.description || '',
-        start_time: existingEvent.start_time.slice(0, 16), // Format for datetime-local input
+        start_time: existingEvent.start_time.slice(0, 16),
         end_time: existingEvent.end_time.slice(0, 16),
         event_type: existingEvent.event_type,
         location: existingEvent.location || '',

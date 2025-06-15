@@ -1,175 +1,149 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
-  Users, 
   FileText, 
-  Calendar, 
-  TrendingUp, 
-  Star, 
-  Zap,
-  Shield,
-  BarChart3,
+  MessageSquare, 
+  Settings, 
+  Users, 
+  Calendar,
   Mail,
-  MessageSquare,
-  Briefcase,
-  UserCheck,
+  BarChart3,
+  Zap,
   Clock,
-  ArrowRight,
-  Sparkles
+  TrendingUp,
+  Target,
+  Award
 } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
-import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardHomeProps {
   onFeatureSelect: (feature: string) => void;
 }
 
 export const DashboardHome: React.FC<DashboardHomeProps> = ({ onFeatureSelect }) => {
-  const { hasFeatureAccess } = useSubscription();
-  const { user } = useAuth();
+  const { subscription } = useSubscription();
 
-  const features = [
+  const quickActions = [
     {
       id: 'resumeScreening',
-      title: 'Resume Screening',
-      description: 'AI-powered resume analysis and candidate scoring',
+      title: 'Screen Resume',
+      description: 'Analyze and score candidate resumes',
       icon: FileText,
-      color: 'from-blue-500 to-blue-600',
-      category: 'Core Features'
+      color: 'bg-blue-500',
+      premium: false
     },
     {
       id: 'interviewQuestions',
-      title: 'Interview Questions',
-      description: 'Generate customized interview questions for any role',
+      title: 'Generate Questions',
+      description: 'Create interview questions',
       icon: MessageSquare,
-      color: 'from-green-500 to-green-600',
-      category: 'Core Features'
+      color: 'bg-green-500',
+      premium: false
     },
+    {
+      id: 'calendarIntegration',
+      title: 'Schedule Meeting',
+      description: 'Manage your calendar events',
+      icon: Calendar,
+      color: 'bg-purple-500',
+      premium: true
+    },
+    {
+      id: 'emailSupport',
+      title: 'Email Templates',
+      description: 'Send professional emails',
+      icon: Mail,
+      color: 'bg-orange-500',
+      premium: true
+    }
+  ];
+
+  const features = [
     {
       id: 'jobDescriptionOptimizer',
       title: 'Job Description Optimizer',
-      description: 'Create compelling job descriptions that attract top talent',
-      icon: Briefcase,
-      color: 'from-purple-500 to-purple-600',
-      category: 'Core Features'
-    },
-    {
-      id: 'performanceEvaluator',
-      title: 'Performance Evaluation',
-      description: 'Comprehensive employee performance assessment tools',
-      icon: UserCheck,
-      color: 'from-orange-500 to-orange-600',
-      category: 'Core Features'
+      description: 'Optimize job postings for better reach',
+      icon: Settings,
+      stats: 'Improves visibility by 40%'
     },
     {
       id: 'candidateMatching',
       title: 'Candidate Matching',
-      description: 'Smart candidate-job matching with AI algorithms',
+      description: 'AI-powered candidate recommendations',
       icon: Users,
-      color: 'from-red-500 to-red-600',
-      category: 'Advanced Features'
+      stats: '95% accuracy rate'
+    },
+    {
+      id: 'performanceEvaluator',
+      title: 'Performance Evaluation',
+      description: 'Comprehensive performance analysis',
+      icon: BarChart3,
+      stats: 'Save 3+ hours per review'
     },
     {
       id: 'teamCollaboration',
       title: 'Team Collaboration',
-      description: 'Streamline HR team workflows and communication',
+      description: 'Enhanced team productivity tools',
       icon: Users,
-      color: 'from-teal-500 to-teal-600',
-      category: 'Advanced Features'
-    },
-    {
-      id: 'calendarIntegration',
-      title: 'Calendar Integration',
-      description: 'Sync interviews and meetings across platforms',
-      icon: Calendar,
-      color: 'from-indigo-500 to-indigo-600',
-      category: 'Integrations'
-    },
-    {
-      id: 'emailSupport',
-      title: 'Email Support',
-      description: '24/7 professional email assistance',
-      icon: Mail,
-      color: 'from-cyan-500 to-cyan-600',
-      category: 'Support'
-    },
-    {
-      id: 'basicAnalytics',
-      title: 'Basic Analytics',
-      description: 'Essential HR metrics and insights',
-      icon: BarChart3,
-      color: 'from-yellow-500 to-yellow-600',
-      category: 'Analytics'
-    },
-    {
-      id: 'prioritySupport',
-      title: 'Priority Support',
-      description: 'VIP support with instant responses',
-      icon: Zap,
-      color: 'from-pink-500 to-pink-600',
-      category: 'Support'
-    },
-    {
-      id: 'advancedAnalytics',
-      title: 'Advanced Analytics',
-      description: 'Deep insights with predictive analytics',
-      icon: TrendingUp,
-      color: 'from-violet-500 to-violet-600',
-      category: 'Analytics'
-    },
-    {
-      id: 'apiAccess',
-      title: 'API Access',
-      description: 'Integrate with your existing systems',
-      icon: Shield,
-      color: 'from-gray-500 to-gray-600',
-      category: 'Developer'
+      stats: 'Boost efficiency by 35%'
     }
   ];
 
-  const categories = Array.from(new Set(features.map(f => f.category)));
-
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-
   const stats = [
-    { label: 'Features Available', value: '12', icon: Sparkles },
-    { label: 'Active Features', value: features.filter(f => hasFeatureAccess(f.id as any)).length.toString(), icon: Star },
-    { label: 'Time Saved', value: '85%', icon: Clock },
-    { label: 'Efficiency Boost', value: '3x', icon: TrendingUp }
+    { label: 'Resumes Processed', value: '1,234', icon: FileText, change: '+12%' },
+    { label: 'Interviews Scheduled', value: '89', icon: Calendar, change: '+8%' },
+    { label: 'Time Saved', value: '45h', icon: Clock, change: '+15%' },
+    { label: 'Success Rate', value: '94%', icon: Target, change: '+3%' }
   ];
 
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
-          {getGreeting()}, {user?.email?.split('@')[0] || 'there'}! 👋
-        </h1>
-        <p className="text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-          Welcome to your HR command center. Choose from our powerful features to streamline your hiring process and boost your team's productivity.
-        </p>
+      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-xl p-8 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Welcome to HRBoost AI</h1>
+            <p className="text-lg opacity-90 mb-4">
+              Streamline your HR processes with AI-powered automation
+            </p>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-white/20 text-white border-0">
+                {subscription?.plan || 'Free'} Plan
+              </Badge>
+              <Badge variant="secondary" className="bg-white/20 text-white border-0">
+                <Award className="h-3 w-3 mr-1" />
+                Pro Features Available
+              </Badge>
+            </div>
+          </div>
+          <div className="hidden lg:block">
+            <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
+              <Zap className="h-12 w-12 mb-2" />
+              <p className="text-sm font-medium">AI-Powered</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
-          <Card key={stat.label} className="hover:shadow-lg transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm">
-            <CardContent className="p-4 lg:p-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg">
-                  <stat.icon className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
-                </div>
+          <Card key={index} className="relative overflow-hidden">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-2xl lg:text-3xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-sm text-gray-600">{stat.label}</p>
+                  <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
+                  <p className="text-2xl font-bold">{stat.value}</p>
+                  <div className="flex items-center mt-2">
+                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                    <span className="text-sm text-green-500 font-medium">{stat.change}</span>
+                  </div>
+                </div>
+                <div className="bg-gray-100 p-3 rounded-lg">
+                  <stat.icon className="h-6 w-6 text-gray-600" />
                 </div>
               </div>
             </CardContent>
@@ -177,101 +151,99 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({ onFeatureSelect })
         ))}
       </div>
 
-      {/* Features by Category */}
-      {categories.map((category) => (
-        <div key={category} className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <h2 className="text-2xl font-bold text-gray-900">{category}</h2>
-            <Badge variant="secondary" className="text-xs">
-              {features.filter(f => f.category === category).length} features
-            </Badge>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-            {features
-              .filter(feature => feature.category === category)
-              .map((feature) => {
-                const hasAccess = hasFeatureAccess(feature.id as any);
-                const IconComponent = feature.icon;
-                
-                return (
-                  <Card 
-                    key={feature.id} 
-                    className={`group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-0 bg-white/80 backdrop-blur-sm overflow-hidden ${
-                      hasAccess ? 'ring-2 ring-green-500 ring-opacity-20' : ''
-                    }`}
-                    onClick={() => onFeatureSelect(feature.id)}
-                  >
-                    <div className={`h-2 bg-gradient-to-r ${feature.color}`} />
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className={`p-3 rounded-lg bg-gradient-to-r ${feature.color} shadow-lg`}>
-                          <IconComponent className="h-6 w-6 text-white" />
-                        </div>
-                        <div className="flex flex-col items-end space-y-1">
-                          {hasAccess ? (
-                            <Badge className="bg-green-100 text-green-800 border-green-200">
-                              <Star className="h-3 w-3 mr-1" />
-                              Active
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-gray-600">
-                              🔒 Locked
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                      <CardTitle className="text-lg lg:text-xl group-hover:text-blue-600 transition-colors">
-                        {feature.title}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <CardDescription className="text-gray-600 mb-4 leading-relaxed">
-                        {feature.description}
-                      </CardDescription>
-                      <Button 
-                        variant={hasAccess ? "default" : "outline"} 
-                        className="w-full group-hover:scale-105 transition-transform"
-                      >
-                        {hasAccess ? (
-                          <>
-                            Launch Feature
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </>
-                        ) : (
-                          <>
-                            View Details
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </>
-                        )}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-          </div>
-        </div>
-      ))}
-
       {/* Quick Actions */}
-      <Card className="border-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white overflow-hidden">
-        <CardContent className="p-6 lg:p-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0">
-            <div className="text-center lg:text-left">
-              <h3 className="text-2xl font-bold mb-2">Ready to transform your HR process?</h3>
-              <p className="text-blue-100">
-                Unlock all features and supercharge your hiring workflow today.
-              </p>
-            </div>
-            <Button 
-              size="lg" 
-              variant="secondary" 
-              className="bg-white text-blue-600 hover:bg-gray-100 font-semibold px-8"
-              onClick={() => onFeatureSelect('resumeScreening')}
+      <div>
+        <h2 className="text-2xl font-semibold mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {quickActions.map((action) => (
+            <Card 
+              key={action.id} 
+              className="cursor-pointer hover:shadow-lg transition-all duration-200 group border-2 hover:border-blue-200"
+              onClick={() => onFeatureSelect(action.id)}
             >
-              Get Started
-              <Sparkles className="ml-2 h-5 w-5" />
-            </Button>
+              <CardContent className="p-6 text-center">
+                <div className={`${action.color} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform`}>
+                  <action.icon className="h-8 w-8 text-white" />
+                </div>
+                <h3 className="font-semibold mb-2">{action.title}</h3>
+                <p className="text-sm text-gray-600 mb-3">{action.description}</p>
+                {action.premium && (
+                  <Badge variant="outline" className="text-xs">
+                    Pro Feature
+                  </Badge>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Feature Grid */}
+      <div>
+        <h2 className="text-2xl font-semibold mb-6">All Features</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {features.map((feature) => (
+            <Card 
+              key={feature.id}
+              className="cursor-pointer hover:shadow-md transition-shadow group"
+              onClick={() => onFeatureSelect(feature.id)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-blue-100 transition-colors">
+                      <feature.icon className="h-5 w-5 text-gray-600 group-hover:text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{feature.title}</CardTitle>
+                      <CardDescription className="text-sm">{feature.description}</CardDescription>
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {feature.stats}
+                  </Badge>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent Activity Placeholder */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>Your latest HR automation activities</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+              <div className="bg-blue-100 p-2 rounded-full">
+                <FileText className="h-4 w-4 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Resume screened for Software Engineer position</p>
+                <p className="text-sm text-gray-600">2 hours ago</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+              <div className="bg-green-100 p-2 rounded-full">
+                <Calendar className="h-4 w-4 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Interview scheduled with John Doe</p>
+                <p className="text-sm text-gray-600">5 hours ago</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+              <div className="bg-purple-100 p-2 rounded-full">
+                <BarChart3 className="h-4 w-4 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium">Performance evaluation completed</p>
+                <p className="text-sm text-gray-600">1 day ago</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

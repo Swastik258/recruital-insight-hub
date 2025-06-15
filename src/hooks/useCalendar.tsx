@@ -65,7 +65,6 @@ export const useCalendar = () => {
         console.error('Error fetching events:', error);
         setError(error.message);
       } else {
-        // Transform the data to ensure attendees is properly typed
         const transformedEvents: CalendarEvent[] = (data || []).map(event => ({
           ...event,
           attendees: Array.isArray(event.attendees) 
@@ -77,29 +76,6 @@ export const useCalendar = () => {
     } catch (err) {
       console.error('Error:', err);
       setError('Failed to fetch events');
-    }
-  };
-
-  const fetchEventAttendees = async (eventId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('calendar_event_attendees')
-        .select(`
-          *,
-          profiles(full_name, email)
-        `)
-        .eq('event_id', eventId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching attendees:', error);
-        setError(error.message);
-      } else {
-        setAttendees(data || []);
-      }
-    } catch (err) {
-      console.error('Error:', err);
-      setError('Failed to fetch attendees');
     }
   };
 
@@ -137,7 +113,6 @@ export const useCalendar = () => {
         return false;
       }
 
-      // Add attendees if specified
       if (eventData.attendees && eventData.attendees.length > 0) {
         const attendeeInserts = eventData.attendees.map(userId => ({
           event_id: data.id,
@@ -206,30 +181,6 @@ export const useCalendar = () => {
     }
   };
 
-  const updateAttendeeStatus = async (attendeeId: string, status: string) => {
-    try {
-      const { error } = await supabase
-        .from('calendar_event_attendees')
-        .update({
-          status,
-          response_at: new Date().toISOString()
-        })
-        .eq('id', attendeeId);
-
-      if (error) {
-        console.error('Error updating attendee status:', error);
-        setError(error.message);
-        return false;
-      }
-
-      return true;
-    } catch (err) {
-      console.error('Error updating attendee status:', err);
-      setError('Failed to update attendance status');
-      return false;
-    }
-  };
-
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -250,8 +201,6 @@ export const useCalendar = () => {
     createEvent,
     updateEvent,
     deleteEvent,
-    fetchEventAttendees,
-    updateAttendeeStatus,
     refetchEvents: fetchEvents
   };
 };
