@@ -5,7 +5,10 @@ import { lazy } from 'react';
 export const createLazyComponent = (importFn: () => Promise<any>) => {
   return lazy(() => 
     importFn().catch(() => ({
-      default: () => <div>Error loading component</div>
+      default: () => {
+        const React = require('react');
+        return React.createElement('div', null, 'Error loading component');
+      }
     }))
   );
 };
