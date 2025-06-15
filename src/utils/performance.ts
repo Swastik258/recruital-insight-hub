@@ -30,15 +30,14 @@ export const preloadResources = () => {
 };
 
 // Core Web Vitals monitoring
-export const measureWebVitals = () => {
-  if ('web-vital' in window) {
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(console.log);
-      getFID(console.log);
-      getFCP(console.log);
-      getLCP(console.log);
-      getTTFB(console.log);
-    });
+export const measureWebVitals = async () => {
+  if ('requestIdleCallback' in window) {
+    const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import('web-vitals');
+    getCLS(console.log);
+    getFID(console.log);
+    getFCP(console.log);
+    getLCP(console.log);
+    getTTFB(console.log);
   }
 };
 
