@@ -17,10 +17,14 @@ import { FeaturePaywall } from '@/components/FeaturePaywall';
 import { DashboardHome } from '@/components/DashboardHome';
 import { Footer } from '@/components/Footer';
 import { useSubscription } from '@/hooks/useSubscription';
+import { usePerformanceOptimization } from '@/hooks/usePerformanceOptimization';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const { subscription } = useSubscription();
+  
+  // Initialize performance optimizations
+  usePerformanceOptimization();
 
   const handleFeatureSelect = (feature: string) => {
     setActiveSection(feature);

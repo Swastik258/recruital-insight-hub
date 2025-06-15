@@ -1,14 +1,23 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Settings, LogOut, User, Home } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Settings, 
+  LogOut, 
+  Menu,
+  Home,
+  Sparkles
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useProfile } from '@/hooks/useProfile';
-import { useSubscription } from '@/hooks/useSubscription';
-import { TeamSwitcher } from './team/TeamSwitcher';
+import { UserProfile } from './UserProfile';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface HeaderProps {
   activeSection: string;
@@ -16,123 +25,77 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ activeSection, setActiveSection }) => {
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
-  const { hasFeatureAccess } = useSubscription();
-
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
-  };
-
-  const handleSettingsClick = () => {
-    setIsProfileOpen(false);
-    navigate('/settings');
-  };
+  const { signOut } = useAuth();
 
   const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, alwaysVisible: true },
-    { id: 'resumeScreening', label: 'Resume Screening', featureKey: 'resumeScreening' },
-    { id: 'interviewQuestions', label: 'Interview Questions', featureKey: 'interviewQuestions' },
-    { id: 'jobDescriptionOptimizer', label: 'Job Descriptions', featureKey: 'jobDescriptionOptimizer' },
-    { id: 'performanceEvaluator', label: 'Performance', featureKey: 'performanceEvaluator' },
-    { id: 'candidateMatching', label: 'Matching', featureKey: 'candidateMatching' },
-    { id: 'teamCollaboration', label: 'Team', featureKey: 'teamCollaboration' },
-    { id: 'calendarIntegration', label: 'Calendar', featureKey: 'calendarIntegration' },
+    { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'resumeScreening', label: 'Resume Screening', icon: Sparkles },
+    { id: 'interviewQuestions', label: 'Interview Questions', icon: Sparkles },
+    { id: 'jobDescriptionOptimizer', label: 'Job Optimizer', icon: Sparkles },
   ];
 
-  const getInitials = () => {
-    if (profile?.full_name) {
-      const names = profile.full_name.split(' ');
-      if (names.length >= 2) {
-        return `${names[0][0]}${names[names.length - 1][0]}`;
-      }
-      return profile.full_name[0];
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
-    return user?.email?.[0]?.toUpperCase() || 'U';
-  };
-
-  const getDisplayName = () => {
-    if (profile?.full_name) {
-      return profile.full_name;
-    }
-    return user?.email || 'User';
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-8">
-            <h1 className="text-2xl font-bold text-gray-900 cursor-pointer" onClick={() => setActiveSection('dashboard')}>
-              week-hr
-            </h1>
-            <nav className="hidden md:flex space-x-6">
-              {navigationItems.map((item) => {
-                const hasAccess = item.alwaysVisible || hasFeatureAccess(item.featureKey as any);
-                return (
-                  <Button
-                    key={item.id}
-                    variant={activeSection === item.id ? 'default' : 'ghost'}
-                    onClick={() => setActiveSection(item.id)}
-                    className={`text-sm ${!hasAccess ? 'opacity-50' : ''}`}
-                  >
-                    {item.icon && <item.icon className="h-4 w-4 mr-2" />}
-                    {item.label}
-                    {!hasAccess && !item.alwaysVisible && ' 🔒'}
-                  </Button>
-                );
-              })}
-            </nav>
+    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo and Brand */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-white" />
+              </div>
+              <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                HRBoost AI
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <TeamSwitcher />
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navigationItems.map((item) => (
+              <Button
+                key={item.id}
+                variant={activeSection === item.id ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setActiveSection(item.id)}
+                className="gap-2"
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </Button>
+            ))}
+          </nav>
+
+          {/* User Profile and Actions */}
+          <div className="flex items-center gap-4">
+            <UserProfile />
             
-            <Popover open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="/placeholder.svg" alt="Profile" />
-                    <AvatarFallback>{getInitials()}</AvatarFallback>
-                  </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <h4 className="font-medium leading-none">{getDisplayName()}</h4>
-                    <p className="text-sm text-muted-foreground">{user?.email}</p>
-                    {profile && (
-                      <div className="text-sm text-muted-foreground">
-                        <p className="text-xs mt-1">
-                          Member since {new Date(profile.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                    {profileLoading && (
-                      <p className="text-sm text-muted-foreground">Loading profile...</p>
-                    )}
-                  </div>
-                  <div className="grid gap-2">
-                    <Button variant="ghost" className="justify-start">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Button>
-                    <Button variant="ghost" className="justify-start" onClick={handleSettingsClick}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Button>
-                    <Button variant="ghost" className="justify-start" onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Logout
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={() => setActiveSection('settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

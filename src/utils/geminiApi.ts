@@ -1,4 +1,3 @@
-
 const GEMINI_API_KEY = 'AIzaSyCHKp7O2KzlRUqFkqB8DobMdksXybdov2A';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
@@ -12,41 +11,71 @@ interface GeminiResponse {
   }>;
 }
 
-export const callGeminiAPI = async (prompt: string): Promise<string> => {
-  try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ]
-      })
-    });
+// Enhanced error handling and retry logic
+export const callGeminiAPI = async (prompt: string, retries: number = 3): Promise<string> => {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`Gemini API call attempt ${attempt}`);
+      
+      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 8192,
+          },
+          safetySettings: [
+            {
+              category: "HARM_CATEGORY_HARASSMENT",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            },
+            {
+              category: "HARM_CATEGORY_HATE_SPEECH",
+              threshold: "BLOCK_MEDIUM_AND_ABOVE"
+            }
+          ]
+        })
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+      }
 
-    const data: GeminiResponse = await response.json();
-    
-    if (data.candidates && data.candidates.length > 0) {
-      return data.candidates[0].content.parts[0].text;
-    } else {
-      throw new Error('No response from Gemini API');
+      const data: GeminiResponse = await response.json();
+      
+      if (data.candidates && data.candidates.length > 0) {
+        console.log('Gemini API call successful');
+        return data.candidates[0].content.parts[0].text;
+      } else {
+        throw new Error('No response from Gemini API');
+      }
+    } catch (error) {
+      console.error(`Gemini API attempt ${attempt} failed:`, error);
+      
+      if (attempt === retries) {
+        throw error;
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
     }
-  } catch (error) {
-    console.error('Error calling Gemini API:', error);
-    throw error;
   }
+  
+  throw new Error('All Gemini API attempts failed');
 };
 
 // Enhanced Resume Screening with comprehensive analysis
