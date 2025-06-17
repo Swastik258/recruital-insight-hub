@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Send, Template, Users, Clock, Sparkles } from 'lucide-react';
+import { Mail, Send, FileText, Users, Clock, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export const EmailSupport: React.FC = () => {
@@ -209,7 +209,7 @@ HR Team`
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Template className="h-5 w-5" />
+              <FileText className="h-5 w-5" />
               <span>Email Templates</span>
             </CardTitle>
             <CardDescription>

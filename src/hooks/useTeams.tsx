@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -119,6 +118,77 @@ export const useTeams = () => {
     }
   };
 
+  const inviteTeamMember = async (email: string, role: string) => {
+    if (!currentTeam) return false;
+
+    try {
+      // In a real implementation, this would send an email invitation
+      // For now, we'll just simulate the invitation process
+      console.log(`Inviting ${email} to team ${currentTeam.name} with role ${role}`);
+      
+      // You would typically:
+      // 1. Send an email invitation
+      // 2. Create a pending invitation record
+      // 3. Handle the invitation acceptance flow
+      
+      return true;
+    } catch (err) {
+      console.error('Error inviting team member:', err);
+      setError('Failed to invite team member');
+      return false;
+    }
+  };
+
+  const updateMemberRole = async (memberId: string, newRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('team_members')
+        .update({ role: newRole })
+        .eq('id', memberId);
+
+      if (error) {
+        console.error('Error updating member role:', error);
+        setError(error.message);
+        return false;
+      }
+
+      // Refresh team members
+      if (currentTeam) {
+        await fetchTeamMembers(currentTeam.id);
+      }
+      return true;
+    } catch (err) {
+      console.error('Error updating member role:', err);
+      setError('Failed to update member role');
+      return false;
+    }
+  };
+
+  const removeTeamMember = async (memberId: string) => {
+    try {
+      const { error } = await supabase
+        .from('team_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) {
+        console.error('Error removing team member:', error);
+        setError(error.message);
+        return false;
+      }
+
+      // Refresh team members
+      if (currentTeam) {
+        await fetchTeamMembers(currentTeam.id);
+      }
+      return true;
+    } catch (err) {
+      console.error('Error removing team member:', err);
+      setError('Failed to remove team member');
+      return false;
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -145,6 +215,9 @@ export const useTeams = () => {
     error,
     switchTeam,
     refetchTeams: fetchTeams,
-    refetchCurrentTeam: fetchCurrentTeam
+    refetchCurrentTeam: fetchCurrentTeam,
+    inviteTeamMember,
+    updateMemberRole,
+    removeTeamMember
   };
 };
